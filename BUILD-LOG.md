@@ -775,3 +775,94 @@ second one.
 
 Four fixtures rest on model agreement rather than human inspection. If a number
 in the post ever needs defending, those four are where to look first.
+
+## 16 — deployed
+
+**Live: https://dog-or-not-289270257791.us-central1.run.app**
+
+Repo public at https://github.com/xbill9/devto-dog — 118 files, EAP gate green
+before it went up, no `.env` or key files tracked, no secret-shaped strings
+anywhere in the tree.
+
+Verified against the deployed service rather than assumed:
+
+    {"type":"match","is_dog":true,"subject":"corgi","confidence":100}
+
+### Cloud Run gives a service two hostnames and tells you about one
+
+`gcloud run services describe` reports the legacy
+`{service}-{hash}-{region}.a.run.app`. `gcloud run deploy` prints the newer
+`{service}-{project-number}.{region}.run.app`. **Both serve.**
+
+Which mattered because `deploy.sh` locks the WebSocket to an origin allowlist —
+the only thing between a public `--allow-unauthenticated` URL and a stranger
+streaming into a billed Live session. Locked to the URL from `make endpoint`,
+the *advertised* URL would have failed the handshake, and the demo would have
+been broken for whoever followed the link from the post.
+
+Allowing both needs a comma in the value. `--set-env-vars` reads a comma as the
+start of the next variable, so gcloud rejected the invocation with a usage dump
+— exactly the trap the file's own comment warned about, one line above the flag.
+Fixed with gcloud's `^@^` custom-delimiter syntax.
+
+### The 403 that was correct
+
+The accuracy harness cannot reach the deployed service: it sends no `Origin`
+header, and `check_origin` accepts a missing Origin only when the allowlist is
+empty. That is the right call — a non-browser client should not be able to skip
+the allowlist by omitting a header — so the fix was to test the way a browser
+actually connects, with `origin=` set, rather than to weaken the check.
+
+Worth keeping straight: the harness measures against **localhost**, the deploy
+is verified **as a browser**. Two different things, and conflating them would
+have meant either a useless test or a hole in the allowlist.
+
+### Live configuration
+
+- Model: the 3.1 Live preview, by decision, shown in the scanner header by
+  decision.
+- `--min-instances=1`: never scales to zero, so it bills continuously until torn
+  down. Right for a demo judges hit cold; worth knowing it runs until Sept 3.
+- Both hostnames allowlisted.
+
+Remaining: record the demo video, and publish.
+
+## 17 — production parity
+
+Added `--origin` to `scan_accuracy.py`, so the harness can measure the deployed
+service and not only localhost. Production, four fixtures (plus two the
+substring filter pulled in for free):
+
+| fixture | verdict | latency |
+|---|---|---|
+| `dog_03` | pembroke welsh corgi | 0.78s |
+| `dog_07` | golden retriever | 0.63s |
+| `notdog_03` | coyote | 0.75s |
+| `notdog_07` | grey wolf | 0.64s |
+| `notdog_11` | bronze statue | 0.85s |
+| `notdog_05` | **SILENT** | — |
+
+**Five of six, matching local behaviour**, with latencies slightly better than
+localhost — plausibly because the Cloud Run instance sits closer to the API than
+this machine does. `notdog_05` had passed twice locally, so that is the second
+observed flake in the project (after `dog_05`), both silences rather than wrong
+answers. Two flakes in ~50 trials is worth stating as a rate rather than
+explaining away.
+
+### A patch that half-applied
+
+The first attempt added the `origin=` connect argument but not the `--origin`
+argparse entry — the `--only` line it anchored on was wrapped across two lines,
+so that replacement silently matched nothing. Result: `args.origin` referenced
+and never defined, and every fixture reported "no result" with the AttributeError
+swallowed by `2>/dev/null`.
+
+Caught by checking `--help` for the flag rather than trusting the edit. A patch
+that reports success having applied half of itself is worse than one that fails.
+
+### README
+
+Live URL added, production harness usage documented, and one line corrected: it
+still said "record with `MODEL_ID` unset", which contradicts the decision to
+show the model in the header. The advice now matches the decision — *run
+something you are willing to name.*

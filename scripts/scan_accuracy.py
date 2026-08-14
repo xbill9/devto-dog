@@ -90,6 +90,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--only", default="", help="substring filter on fixture filename"
     )
+    p.add_argument(
+        "--origin",
+        default="",
+        help=(
+            "Origin header to send, for a deployed service behind an origin "
+            "allowlist. Local runs need none; production rejects a handshake "
+            "without one, which is correct -- a non-browser client must not be "
+            "able to skip the allowlist by omitting a header."
+        ),
+    )
     p.add_argument("--rounds", type=int, default=1, help="passes over the fixture set")
     p.add_argument(
         "--hold", type=float, default=9.0, help="seconds to hold each hand up"
@@ -359,7 +369,10 @@ async def run_condition(args: argparse.Namespace, cond: dict) -> dict:
     received: list[dict] = []
     counters = {"video_bytes": 0, "video_frames": 0, "audio_bytes": 0, "down_bytes": 0}
 
-    async with websockets.connect(url, max_size=None) as ws:
+    connect_kwargs = {"max_size": None}
+    if args.origin:
+        connect_kwargs["origin"] = args.origin
+    async with websockets.connect(url, **connect_kwargs) as ws:
         config = json.loads(await ws.recv())
         if config.get("type") != "config":
             raise RuntimeError(f"expected config frame, got {config.get('type')!r}")

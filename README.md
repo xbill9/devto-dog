@@ -9,6 +9,12 @@ entire joke is that it does not know it is making one.
 
 > Built for the [DEV Weekend Challenge: Dog Days Edition](https://dev.to/challenges/weekend-2026-08-13).
 
+**Live: https://dog-or-not-289270257791.us-central1.run.app**
+
+Grant camera access, press INITIATE, hold something up and say **"scan"**.
+Chrome or Edge for the voice command; everywhere else the SCAN button does the
+same thing.
+
 ## Credit where it is due
 
 This is a fork of **[way-back-home/level_3_new](https://github.com/xbill9/way-back-home)**,
@@ -105,10 +111,19 @@ accuracy visibly worse.
 ## Measuring it
 
 ```bash
-./scripts/scan_accuracy.py                    # baseline
+./scripts/scan_accuracy.py                    # baseline, against localhost
 ./scripts/scan_accuracy.py --lighting dark    # one degraded condition
 ./scripts/scan_accuracy.py --matrix --json out.json
+
+# Against the deployed service, which sits behind an origin allowlist:
+./scripts/scan_accuracy.py \
+  --url wss://dog-or-not-289270257791.us-central1.run.app \
+  --origin https://dog-or-not-289270257791.us-central1.run.app
 ```
+
+`--origin` is required in production and pointless locally. The backend accepts
+a missing `Origin` only when the allowlist is empty, so a non-browser client
+cannot skip the allowlist by omitting the header.
 
 Drives the real WebSocket endpoint with fixture images and a text stimulus, then
 scores what the model did against known ground truth, with bandwidth and latency
@@ -128,9 +143,10 @@ fails if anything git would publish names a non-public model. The model id comes
 from `MODEL_ID` and defaults to GA; the tree never names anything else.
 
 **The scanner prints its live model id in the header**, deliberately — it proves
-which model is behind the glass. That also means a screen recording made against
-a non-public model publishes the id in pixels, where no repo scan can catch it.
-Record with `MODEL_ID` unset.
+which model is behind the glass, and knowing what a demo is actually running on
+is worth more than hiding it. That is a decision, not an oversight: it means the
+id appears in any screen recording, in pixels, where no repo scan can reach it.
+Run something you are willing to name.
 
 ## Credits
 
