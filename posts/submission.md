@@ -28,11 +28,18 @@ The classification line is where it gets interesting. A wolf is not a dog. Neith
 
 ## Demo
 
-<!-- PASTE_DEMO_URL_HERE -->
+**Live:** https://dog-or-not-289270257791.us-central1.run.app
+
+<!-- PASTE_VIDEO_HERE — record with a phone held up to the webcam; the fixture
+     portal at /portal.html cycles the eval set. -->
+
+Grant camera access, press INITIATE, then hold something up and say **"scan"**.
+Chrome or Edge for the voice command — everywhere else, use the SCAN button,
+which does exactly the same thing.
 
 ## Code
 
-<!-- PASTE_REPO_EMBED_HERE -->
+{% embed https://github.com/xbill9/devto-dog %}
 
 Forked from [way-back-home](https://github.com/xbill9/way-back-home), which was the same scanner counting fingers for a biometric handshake. The multimodal plumbing came from there — bidirectional WebSocket, 1 FPS video, local wake-word detection, the accuracy harness, the Cloud Run chain — and it is the reason this exists at all in a weekend.
 

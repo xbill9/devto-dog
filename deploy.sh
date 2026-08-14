@@ -65,7 +65,20 @@ gcloud secrets add-iam-policy-binding "$SECRET_NAME" \
 # Deploy.
 #
 # --set-env-vars replaces the whole environment, so every variable must go in
-# a single comma-separated flag. Repeating the flag keeps only the last one.
+# a single flag. Repeating the flag keeps only the last one.
+#
+# The `^@^` prefix switches the separator from comma to `@`. Without it,
+# ALLOWED_ORIGINS could never hold more than one origin -- a comma inside a
+# value is read as the start of the next variable, and gcloud rejects the whole
+# invocation with a usage dump.
+#
+# That is not hypothetical. Cloud Run issues a service TWO hostnames: a legacy
+# `{service}-{hash}-{region}.a.run.app` and a newer
+# `{service}-{project-number}.{region}.run.app`. `gcloud run services describe`
+# reports the first; `gcloud run deploy` prints the second. Both serve. A
+# browser loading the page from one sends that one as its WebSocket Origin, so
+# an allowlist holding only the other rejects the handshake -- and the demo
+# fails for whoever happened to use the other link.
 # ---------------------------------------------------------------------------
 # A WebSocket is a single long-lived request to Cloud Run, so the request
 # timeout is the session cap. The default is 300s, which silently severed the
@@ -87,7 +100,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --timeout=3600 \
   --min-instances=1 \
   --labels=dev-tutorial=multi-modal \
-  --set-env-vars="GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${REGION},GOOGLE_GENAI_USE_VERTEXAI=False,MODEL_ID=${MODEL_ID:-gemini-2.5-flash-native-audio-latest},ALLOWED_ORIGINS=${ALLOWED_ORIGINS}" \
+  --set-env-vars="^@^GOOGLE_CLOUD_PROJECT=${PROJECT_ID}@GOOGLE_CLOUD_LOCATION=${REGION}@GOOGLE_GENAI_USE_VERTEXAI=False@MODEL_ID=${MODEL_ID:-gemini-2.5-flash-native-audio-latest}@ALLOWED_ORIGINS=${ALLOWED_ORIGINS}" \
   --set-secrets="GOOGLE_API_KEY=${SECRET_NAME}:latest,GEMINI_API_KEY=${SECRET_NAME}:latest,GEMINI_KEY=${SECRET_NAME}:latest"
 
 if [ -z "$ALLOWED_ORIGINS" ]; then
