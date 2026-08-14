@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gravy Boat — a poutinerie</title>
+<meta name="description" content="Gravy Boat is a poutinerie: hand-cut fries, squeaky curds, and gravy made from scratch every morning. Menu, hours and where to find the truck.">
+<meta name="color-scheme" content="dark light">
+<link rel="stylesheet" href="styles.css">
+<!-- Marks the document as scripted before first paint, so the collapsible
+     mobile nav is only ever hidden when there is JS available to reopen it. -->
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">
+        <b>Gravy Boat</b>
+        <small>poutinerie · est. 2019</small>
+      </span>
+    </a>
+
+    <button class="nav-toggle" type="button"
+            aria-expanded="false" aria-controls="site-nav">
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+      Menu
+    </button>
+
+    <nav id="site-nav" class="site-nav" aria-label="Main">
+      <ul>
+        <li><a href="#menu">The poutines</a></li>
+        <li><a href="#build">How it's built</a></li>
+        <li><a href="#find">Find us</a></li>
+        <li><a href="#faq">Questions</a></li>
+      </ul>
+    </nav>
+
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================================================
+       HERO — the CSS poutine, plus the gravy control
+       ============================================================ -->
+  <section class="hero" id="top" aria-labelledby="hero-h">
+    <div class="wrap hero-grid">
+
+      <div class="hero-copy">
+        <p class="eyebrow">Hand-cut · Fresh curds · Gravy from scratch</p>
+        <h1 id="hero-h">The only three ingredients that have ever mattered.</h1>
+        <p class="lede">
+          Potatoes cut this morning. Curds that squeak or they go back.
+          Gravy simmered from real bones since six a.m. That's the whole
+          idea, and we have spent six years refusing to complicate it.
+        </p>
+
+        <p class="cta-row">
+          <a class="btn btn-primary" href="#menu">See the poutines</a>
+          <a class="btn btn-ghost" href="#find">Where's the truck?</a>
+        </p>
+
+        <!-- the interactive bit: it drives the artwork beside it -->
+        <div class="gravy-control">
+          <label for="gravy">Gravy level</label>
+          <input type="range" id="gravy" name="gravy"
+                 min="0" max="3" step="1" value="2"
+                 aria-describedby="gravy-note">
+          <output id="gravy-note" for="gravy">Classic — the way it comes</output>
+        </div>
+      </div>
+
+      <!-- ---------- the artwork ---------- -->
+      <div class="hero-art">
+        <div class="scene" id="scene" data-gravy="2" role="img"
+             aria-label="A heaping paper tray of poutine: golden french fries piled high, white cheese curds tucked between them, and a thick ribbon of brown gravy pouring over the top, with steam rising.">
+
+          <div class="steam" aria-hidden="true">
+            <i style="--x:38%; --w:13; --h:26; --dur:7.5s;  --delay:0s"></i>
+            <i style="--x:50%; --w:16; --h:32; --dur:9s;    --delay:1.4s"></i>
+            <i style="--x:61%; --w:12; --h:24; --dur:8.2s;  --delay:2.9s"></i>
+            <i style="--x:45%; --w:10; --h:20; --dur:10.5s; --delay:4.3s"></i>
+          </div>
+
+          <div class="tray-mouth" aria-hidden="true"></div>
+          <div class="tray" aria-hidden="true"></div>
+
+          <div class="pile" aria-hidden="true">
+
+            <div class="gravy-base"></div>
+
+            <!-- back row -->
+            <i class="fry back" style="--x:32%; --y:44%; --r:-30deg; --l:24; --w:3.0; --s:.7"></i>
+            <i class="fry back" style="--x:39%; --y:33%; --r:12deg;  --l:25; --w:2.9; --s:.4"></i>
+            <i class="fry back" style="--x:47%; --y:27%; --r:-24deg; --l:26; --w:3.2; --s:.55"></i>
+            <i class="fry back" style="--x:55%; --y:30%; --r:38deg;  --l:25; --w:2.9; --s:.3"></i>
+            <i class="fry back" style="--x:63%; --y:36%; --r:-14deg; --l:24; --w:3.0; --s:.65"></i>
+            <i class="fry back" style="--x:69%; --y:44%; --r:22deg;  --l:21; --w:2.8; --s:.45"></i>
+            <i class="fry back" style="--x:28%; --y:50%; --r:-18deg; --l:20; --w:2.9; --s:.6"></i>
+            <i class="fry back" style="--x:43%; --y:38%; --r:64deg;  --l:23; --w:2.7; --s:.35"></i>
+            <i class="fry back" style="--x:52%; --y:35%; --r:-6deg;  --l:24; --w:2.8; --s:.5"></i>
+            <i class="fry back" style="--x:60%; --y:40%; --r:26deg;  --l:23; --w:2.9; --s:.7"></i>
+            <i class="fry back" style="--x:35%; --y:47%; --r:-52deg; --l:22; --w:2.8; --s:.25"></i>
+            <i class="fry back" style="--x:67%; --y:50%; --r:8deg;   --l:21; --w:2.7; --s:.55"></i>
+            <i class="fry back" style="--x:50%; --y:44%; --r:78deg;  --l:22; --w:3.1; --s:.4"></i>
+            <i class="fry back" style="--x:72%; --y:53%; --r:34deg;  --l:18; --w:2.8; --s:.6"></i>
+            <i class="fry back" style="--x:26%; --y:56%; --r:-40deg; --l:18; --w:2.8; --s:.45"></i>
+
+            <!-- middle row -->
+            <i class="fry mid" style="--x:31%; --y:58%; --r:-24deg; --l:22; --w:3.2; --s:.5"></i>
+            <i class="fry mid" style="--x:36%; --y:53%; --r:20deg;  --l:25; --w:3.1; --s:.75"></i>
+            <i class="fry mid" style="--x:44%; --y:49%; --r:-32deg; --l:26; --w:3.2; --s:.35"></i>
+            <i class="fry mid" style="--x:53%; --y:48%; --r:6deg;   --l:25; --w:3.1; --s:.6"></i>
+            <i class="fry mid" style="--x:61%; --y:52%; --r:-20deg; --l:24; --w:3.2; --s:.45"></i>
+            <i class="fry mid" style="--x:68%; --y:58%; --r:30deg;  --l:21; --w:3.1; --s:.7"></i>
+            <i class="fry mid" style="--x:33%; --y:64%; --r:-56deg; --l:21; --w:2.9; --s:.3"></i>
+            <i class="fry mid" style="--x:49%; --y:56%; --r:34deg;  --l:23; --w:2.9; --s:.55"></i>
+            <i class="fry mid" style="--x:57%; --y:55%; --r:-10deg; --l:24; --w:2.9; --s:.4"></i>
+            <i class="fry mid" style="--x:66%; --y:64%; --r:48deg;  --l:20; --w:2.9; --s:.65"></i>
+            <i class="fry mid" style="--x:27%; --y:65%; --r:-14deg; --l:18; --w:3.0; --s:.5"></i>
+            <i class="fry mid" style="--x:73%; --y:65%; --r:18deg;  --l:18; --w:3.0; --s:.35"></i>
+            <i class="fry mid" style="--x:40%; --y:60%; --r:-16deg; --l:22; --w:2.8; --s:.6"></i>
+            <i class="fry mid" style="--x:60%; --y:60%; --r:14deg;  --l:22; --w:2.8; --s:.45"></i>
+            <i class="fry mid" style="--x:51%; --y:64%; --r:-46deg; --l:21; --w:2.9; --s:.7"></i>
+            <i class="fry mid" style="--x:44%; --y:67%; --r:70deg;  --l:20; --w:2.9; --s:.4"></i>
+            <i class="fry mid" style="--x:38%; --y:71%; --r:-66deg; --l:19; --w:2.9; --s:.55"></i>
+            <i class="fry mid" style="--x:63%; --y:70%; --r:58deg;  --l:19; --w:2.9; --s:.35"></i>
+
+            <!-- curds under the gravy -->
+            <i class="curd under" style="--x:32%; --y:57%; --d:7.4; --r:-14deg"></i>
+            <i class="curd under" style="--x:47%; --y:51%; --d:6.4; --r:22deg;  --br:58% 42% 48% 52% / 52% 46% 54% 48%"></i>
+            <i class="curd under" style="--x:65%; --y:55%; --d:8.0; --r:-8deg"></i>
+            <i class="curd under" style="--x:57%; --y:63%; --d:6.0; --r:34deg;  --br:44% 56% 62% 38% / 58% 42% 58% 42%"></i>
+            <i class="curd under" style="--x:38%; --y:44%; --d:5.6; --r:-26deg"></i>
+            <i class="curd under" style="--x:71%; --y:47%; --d:6.2; --r:12deg;  --br:64% 36% 46% 54% / 42% 62% 38% 58%"></i>
+
+            <!-- gravy draped over the pile -->
+            <b class="sauce" style="--x:36%; --y:59%; --w:26; --h:8;   --r:-7deg;  --dur:7s;   --delay:0s"></b>
+            <b class="sauce" style="--x:62%; --y:56%; --w:24; --h:7.5; --r:5deg;   --dur:8.4s; --delay:1.1s;
+                                    --br:48% 52% 56% 44% / 54% 46% 54% 46%"></b>
+            <b class="sauce" style="--x:48%; --y:69%; --w:30; --h:9;   --r:2deg;   --dur:9.2s; --delay:.5s"></b>
+            <b class="sauce" style="--x:26%; --y:71%; --w:19; --h:6.5; --r:-12deg; --dur:7.8s; --delay:2.2s;
+                                    --br:58% 42% 44% 56% / 46% 58% 42% 54%"></b>
+            <b class="sauce" style="--x:74%; --y:69%; --w:19; --h:6.5; --r:9deg;   --dur:8.8s; --delay:1.7s"></b>
+            <b class="sauce" style="--x:52%; --y:45%; --w:20; --h:6;   --r:-4deg;  --dur:6.6s; --delay:2.9s;
+                                    --br:52% 48% 60% 40% / 44% 60% 40% 56%"></b>
+
+            <!-- front row -->
+            <i class="fry front" style="--x:30%; --y:78%; --r:-38deg;  --l:20; --w:3.4; --s:.55"></i>
+            <i class="fry front" style="--x:42%; --y:82%; --r:-72deg;  --l:21; --w:3.3; --s:.7"></i>
+            <i class="fry front" style="--x:58%; --y:81%; --r:80deg;   --l:21; --w:3.4; --s:.4"></i>
+            <i class="fry front" style="--x:70%; --y:77%; --r:40deg;   --l:19; --w:3.3; --s:.6"></i>
+            <i class="fry front" style="--x:36%; --y:72%; --r:-28deg;  --l:21; --w:3.1; --s:.3"></i>
+            <i class="fry front" style="--x:52%; --y:74%; --r:16deg;   --l:22; --w:3.1; --s:.65"></i>
+            <i class="fry front" style="--x:64%; --y:71%; --r:-42deg;  --l:21; --w:3.1; --s:.45"></i>
+            <i class="fry front" style="--x:46%; --y:88%; --r:-96deg;  --l:19; --w:3.3; --s:.5"></i>
+            <i class="fry front" style="--x:61%; --y:90%; --r:104deg;  --l:18; --w:3.3; --s:.75"></i>
+            <i class="fry front" style="--x:27%; --y:73%; --r:-20deg;  --l:17; --w:3.1; --s:.35"></i>
+            <i class="fry front" style="--x:74%; --y:72%; --r:24deg;   --l:17; --w:3.1; --s:.6"></i>
+            <i class="fry front" style="--x:49%; --y:77%; --r:56deg;   --l:18; --w:3.0; --s:.5"></i>
+            <i class="fry front" style="--x:55%; --y:66%; --r:-8deg;   --l:21; --w:3.0; --s:.4"></i>
+            <i class="fry front" style="--x:38%; --y:90%; --r:-110deg; --l:17; --w:3.1; --s:.7"></i>
+            <i class="fry front" style="--x:68%; --y:86%; --r:98deg;   --l:17; --w:3.2; --s:.55"></i>
+            <i class="fry front" style="--x:33%; --y:86%; --r:-100deg; --l:17; --w:3.2; --s:.45"></i>
+            <i class="fry front" style="--x:50%; --y:70%; --r:88deg;   --l:19; --w:3.0; --s:.6"></i>
+
+            <!-- curds on top -->
+            <i class="curd melting" style="--x:40%; --y:49%; --d:8.4; --r:-12deg"></i>
+            <i class="curd melting" style="--x:60%; --y:45%; --d:7.2; --r:18deg;  --br:56% 44% 60% 40% / 46% 56% 44% 54%"></i>
+            <i class="curd melting" style="--x:49%; --y:59%; --d:8.8; --r:6deg"></i>
+            <i class="curd melting" style="--x:69%; --y:61%; --d:7.0; --r:-22deg; --br:48% 52% 42% 58% / 60% 44% 56% 40%"></i>
+            <i class="curd melting" style="--x:30%; --y:64%; --d:7.2; --r:28deg"></i>
+            <i class="curd"         style="--x:74%; --y:74%; --d:6.0; --r:-6deg;  --br:60% 40% 52% 48% / 44% 58% 42% 56%"></i>
+            <i class="curd"         style="--x:35%; --y:76%; --d:6.4; --r:16deg"></i>
+
+            <!-- last ladles, over everything -->
+            <b class="sauce top" style="--x:44%; --y:63%; --w:22; --h:6.5; --r:-5deg; --dur:8s;   --delay:1.4s"></b>
+            <b class="sauce top" style="--x:64%; --y:75%; --w:18; --h:6;   --r:7deg;  --dur:9.6s; --delay:.3s;
+                                        --br:50% 50% 58% 42% / 52% 48% 52% 48%"></b>
+            <b class="sauce top" style="--x:34%; --y:81%; --w:19; --h:6;   --r:-9deg; --dur:7.2s; --delay:2.5s"></b>
+            <b class="sauce top" style="--x:56%; --y:68%; --w:20; --h:6;   --r:4deg;  --dur:8.2s; --delay:1.9s;
+                                        --br:56% 44% 46% 54% / 48% 54% 46% 52%"></b>
+            <b class="sauce top" style="--x:40%; --y:72%; --w:17; --h:5.5; --r:-6deg; --dur:6.8s; --delay:.9s"></b>
+
+            <!-- runnels -->
+            <b class="runnel" style="--x:34%; --y:76%; --w:3.0; --h:8;   --r:-8deg; --dur:7.4s; --delay:.6s"></b>
+            <b class="runnel" style="--x:50%; --y:82%; --w:3.4; --h:9;   --r:3deg;  --dur:8.6s; --delay:2.1s"></b>
+            <b class="runnel" style="--x:66%; --y:78%; --w:2.8; --h:7.5; --r:6deg;  --dur:9.2s; --delay:1.3s"></b>
+
+          </div>
+
+          <div class="tray-rim" aria-hidden="true"></div>
+          <div class="pour" aria-hidden="true"></div>
+          <b class="droplet" style="--delay:1.7s" aria-hidden="true"></b>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       THE THREE THINGS
+       ============================================================ -->
+  <section id="build" class="section" aria-labelledby="build-h">
+    <div class="wrap">
+      <h2 id="build-h">How it's built</h2>
+      <p class="section-lede">
+        Three components. Each one is the whole job.
+      </p>
+
+      <ol class="build-list">
+        <li>
+          <span class="build-num" aria-hidden="true">01</span>
+          <h3>The fries</h3>
+          <p>
+            Russets, skin on, cut at 11&nbsp;mm. Blanched at 150&nbsp;°C,
+            rested, then fried hard at 190&nbsp;°C so the outside can stand
+            up to what happens next. A soggy fry is a failure of planning.
+          </p>
+        </li>
+        <li>
+          <span class="build-num" aria-hidden="true">02</span>
+          <h3>The curds</h3>
+          <p>
+            Delivered from a dairy two hours west, never refrigerated below
+            room temperature, used the day they arrive. If they don't squeak
+            against your teeth, they are not curds, they are just cheese.
+          </p>
+        </li>
+        <li>
+          <span class="build-num" aria-hidden="true">03</span>
+          <h3>The gravy</h3>
+          <p>
+            Veal and chicken bones roasted dark, simmered six hours, thickened
+            with a roux the colour of a paper bag. It goes on hot enough to
+            soften the curds at the edges and nowhere else.
+          </p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MENU
+       ============================================================ -->
+  <section id="menu" class="section section-alt" aria-labelledby="menu-h">
+    <div class="wrap">
+      <h2 id="menu-h">The poutines</h2>
+      <p class="section-lede">
+        Everything comes in a paper boat. Everything comes with a fork you
+        will abandon within ninety seconds.
+      </p>
+
+      <div class="filters" role="group" aria-labelledby="filter-h">
+        <h3 id="filter-h" class="filters-title">Filter by</h3>
+        <button type="button" class="chip" data-filter="all" aria-pressed="true">Everything</button>
+        <button type="button" class="chip" data-filter="veg" aria-pressed="false">Vegetarian</button>
+        <button type="button" class="chip" data-filter="spicy" aria-pressed="false">Spicy</button>
+        <button type="button" class="chip" data-filter="meat" aria-pressed="false">Meaty</button>
+      </div>
+
+      <p class="filter-status" role="status">Showing all 8 poutines.</p>
+
+      <ul class="menu-grid" id="menu-grid">
+
+        <li class="dish" data-tags="veg">
+          <h3>La Classique</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$9</p>
+          <p>Fries, curds, gravy. Nothing else has been invited.</p>
+          <p class="tags"><span class="tag tag-veg">Vegetarian</span></p>
+        </li>
+
+        <li class="dish" data-tags="meat">
+          <h3>La Montréalaise</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$14</p>
+          <p>Hand-sliced smoked meat, cracked mustard seed, a little pickle brine.</p>
+          <p class="tags"><span class="tag tag-meat">Meaty</span></p>
+        </li>
+
+        <li class="dish" data-tags="meat">
+          <h3>Le Bûcheron</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$15</p>
+          <p>Pulled pork shoulder, crisp onion, one honest spoon of maple.</p>
+          <p class="tags"><span class="tag tag-meat">Meaty</span></p>
+        </li>
+
+        <li class="dish" data-tags="veg">
+          <h3>La Forestière</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$12</p>
+          <p>Wild mushroom gravy, thyme, curds. No animals were consulted.</p>
+          <p class="tags"><span class="tag tag-veg">Vegetarian</span></p>
+        </li>
+
+        <li class="dish" data-tags="meat">
+          <h3>La Galvaude</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$13</p>
+          <p>Roast chicken and green peas. Contentious. Correct.</p>
+          <p class="tags"><span class="tag tag-meat">Meaty</span></p>
+        </li>
+
+        <li class="dish" data-tags="veg spicy">
+          <h3>La Diablesse</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$12</p>
+          <p>Hot pepper gravy, pickled jalapeño, a warning printed on the boat.</p>
+          <p class="tags">
+            <span class="tag tag-veg">Vegetarian</span>
+            <span class="tag tag-spicy">Spicy</span>
+          </p>
+        </li>
+
+        <li class="dish" data-tags="meat spicy">
+          <h3>Le Feu de Camp</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$15</p>
+          <p>Smoked brisket, chipotle gravy, burnt-end crumb.</p>
+          <p class="tags">
+            <span class="tag tag-meat">Meaty</span>
+            <span class="tag tag-spicy">Spicy</span>
+          </p>
+        </li>
+
+        <li class="dish" data-tags="veg">
+          <h3>La Petite</h3>
+          <p class="price"><span class="visually-hidden">Price: </span>$6</p>
+          <p>Half a Classique, for people who claim they are not hungry.</p>
+          <p class="tags"><span class="tag tag-veg">Vegetarian</span></p>
+        </li>
+
+      </ul>
+
+      <p class="menu-empty" hidden>
+        Nothing matches that combination. Try <button type="button" class="linkish" data-filter="all">showing everything</button>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FIND US
+       ============================================================ -->
+  <section id="find" class="section" aria-labelledby="find-h">
+    <div class="wrap find-grid">
+
+      <div>
+        <h2 id="find-h">Find us</h2>
+        <p class="section-lede">
+          One truck, four corners, no app required.
+        </p>
+
+        <h3>This week</h3>
+        <table class="hours">
+          <caption class="visually-hidden">Where the Gravy Boat truck parks each day this week</caption>
+          <thead>
+            <tr><th scope="col">Day</th><th scope="col">Where</th><th scope="col">Hours</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Tue–Wed</th><td>Marché Jean-Talon, north gate</td><td>11:00 – 20:00</td></tr>
+            <tr><th scope="row">Thu</th><td>Parc La Fontaine, Rachel side</td><td>11:00 – 21:00</td></tr>
+            <tr><th scope="row">Fri–Sat</th><td>Rue Saint-Denis at Duluth</td><td>11:00 – 02:00</td></tr>
+            <tr><th scope="row">Sun</th><td>Old Port, Clock Tower Quay</td><td>12:00 – 18:00</td></tr>
+            <tr><th scope="row">Mon</th><td>Closed — we are making gravy</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="signup-card">
+        <h3 id="signup-h">Get the pin dropped to you</h3>
+        <p>
+          One message a week, Tuesday morning, with exactly where the truck
+          will be. Nothing else, ever.
+        </p>
+
+        <!-- `novalidate` is applied by app.js, never here: without JS the
+             browser's own validation is the fallback and must stay on. -->
+        <form class="signup" aria-labelledby="signup-h">
+          <div class="field">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email"
+                   autocomplete="email" required
+                   aria-describedby="email-hint email-error">
+            <p class="hint" id="email-hint">We'll only use this for the weekly location.</p>
+            <p class="error" id="email-error" hidden></p>
+          </div>
+          <button class="btn btn-primary" type="submit">Send me the pin</button>
+          <p class="form-status" role="status"></p>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FAQ
+       ============================================================ -->
+  <section id="faq" class="section section-alt" aria-labelledby="faq-h">
+    <div class="wrap wrap-narrow">
+      <h2 id="faq-h">Questions we get</h2>
+
+      <details name="faq">
+        <summary>Is the gravy vegetarian?</summary>
+        <p>
+          The house gravy is not — it starts with roasted veal and chicken
+          bones. La Forestière and La Diablesse are built on a mushroom gravy
+          instead, and either can be made on any base dish. Ask at the window.
+        </p>
+      </details>
+
+      <details name="faq">
+        <summary>Why won't you deliver?</summary>
+        <p>
+          A poutine has a working life of about eleven minutes. After that the
+          fries surrender and you are eating a very good soup. We would rather
+          you walk to us.
+        </p>
+      </details>
+
+      <details name="faq">
+        <summary>Can I get it without curds?</summary>
+        <p>
+          You can get fries with gravy, which is a fine order and an entirely
+          different dish. We will not call it poutine and neither should you.
+        </p>
+      </details>
+
+      <details name="faq">
+        <summary>Do you take cash?</summary>
+        <p>
+          Cash, card, and tap. There is a machine on the counter that has been
+          rained on twice and still works, which is more than can be said for
+          most of us.
+        </p>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand"><b>Gravy Boat</b> · poutinerie</p>
+    <p class="footer-note">
+      A fictional restaurant, built for the DEV Frontend Challenge:
+      Comfort Food Edition. The poutine above is drawn entirely in CSS —
+      no images, no SVG, no canvas.
+    </p>
+  </div>
+</footer>
+
+<script src="app.js" type="module"></script>
+</body>
+</html>

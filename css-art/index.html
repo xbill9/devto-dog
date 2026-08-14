@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Poutine — CSS Art</title>
+<style>
+/* ============================================================
+   POUTINE — CSS Art
+   Fries, curds, gravy and steam. No images, no SVG, no canvas.
+   Every element below is an <i> or <b> shaped with CSS.
+
+   SIZING: the scene defines --u (its own edge length) and --px
+   (one hundredth of it). Every part is sized in those units, so
+   the whole dish scales as one piece and never drifts out of
+   proportion with the viewport.
+   ============================================================ */
+
+:root{
+  /* fries */
+  --fry-light:#ffcf63;
+  --fry-mid:#eda434;
+  --fry-deep:#c9781d;
+  --fry-crisp:#9c5613;
+  /* curds */
+  --curd-light:#fdf8e6;
+  --curd-mid:#ede0bf;
+  --curd-shade:#c9b68c;
+  /* gravy */
+  --gravy-light:#9c5f2e;
+  --gravy-mid:#66381a;
+  --gravy-deep:#3a1d0c;
+  /* paper tray */
+  --paper:#fbf7ef;
+  --check:#cf2f2b;
+  /* scene */
+  --bg-far:#1a120d;
+  --bg-near:#4a3123;
+  --steam:255,244,232;
+}
+
+*{box-sizing:border-box}
+
+html,body{height:100%}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(120% 90% at 50% 40%, var(--bg-near) 0%, var(--bg-far) 62%, #0d0806 100%);
+  font-family:ui-rounded,"Segoe UI",system-ui,-apple-system,sans-serif;
+  color:#f3e3cf;
+  overflow:hidden;
+}
+
+/* ---------- stage ---------- */
+
+.stage{
+  display:grid;
+  justify-items:center;
+  gap:.5rem;
+  padding:1rem;
+}
+
+.scene{
+  --u:min(86vw, 78vh, 620px);
+  --px:calc(var(--u) / 100);
+  position:relative;
+  width:var(--u);
+  height:var(--u);
+  isolation:isolate;
+}
+
+/* warm pool of light on the table under the tray */
+.scene::after{
+  content:"";
+  position:absolute;
+  left:4%; right:4%;
+  bottom:2%;
+  height:14%;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(255,190,110,.28), rgba(255,190,110,0) 70%);
+  filter:blur(calc(1 * var(--px)));
+  z-index:0;
+}
+
+/* ============================================================
+   STEAM — behind everything, four drifting wisps
+   ============================================================ */
+
+.steam{
+  position:absolute;
+  left:0; right:0; top:-16%;
+  height:44%;
+  z-index:1;
+  filter:blur(calc(3 * var(--px)));
+}
+
+.steam i{
+  position:absolute;
+  left:var(--x);
+  bottom:0;
+  width:calc(var(--w) * var(--px));
+  height:calc(var(--h) * var(--px));
+  border-radius:50% 50% 46% 54% / 60% 58% 42% 40%;
+  background:linear-gradient(to top,
+    rgba(var(--steam),0) 0%,
+    rgba(var(--steam),.52) 36%,
+    rgba(var(--steam),.18) 76%,
+    rgba(var(--steam),0) 100%);
+  opacity:0;
+  animation:rise var(--dur) ease-in-out var(--delay) infinite;
+}
+
+@keyframes rise{
+  0%   {opacity:0;   transform:translate(-50%,25%)  scale(.55) rotate(0deg)}
+  18%  {opacity:.8}
+  55%  {opacity:.5;  transform:translate(calc(-50% + 2.2 * var(--px)),-40%) scale(1) rotate(6deg)}
+  100% {opacity:0;   transform:translate(calc(-50% - 1.6 * var(--px)),-115%) scale(1.5) rotate(-5deg)}
+}
+
+/* ============================================================
+   PAPER TRAY — checkered casse-croûte boat
+   ============================================================ */
+
+.tray{
+  position:absolute;
+  left:12%; right:12%;
+  top:63%;
+  bottom:17%;
+  z-index:2;
+  /* a paper boat: wide mouth, tapered base, softened bottom corners */
+  clip-path:polygon(0% 0%, 100% 0%, 96% 44%, 90% 76%, 82% 93%, 73% 100%, 27% 100%, 18% 93%, 10% 76%, 4% 44%);
+  background:
+    /* shading so the paper turns away from the light */
+    linear-gradient(100deg, rgba(0,0,0,.36) 0%, rgba(0,0,0,0) 24%, rgba(0,0,0,0) 66%, rgba(0,0,0,.44) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,.04) 0%, rgba(0,0,0,.30) 100%),
+    /* the checkerboard */
+    conic-gradient(var(--check) 25%, var(--paper) 0 50%, var(--check) 0 75%, var(--paper) 0);
+  background-size:auto, auto, 10.2% 35%;
+  background-position:0 0, 0 0, 50% 0;
+  filter:saturate(.9);
+}
+
+/* grease spots blooming through the paper */
+.tray::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(24% 20% at 32% 30%, rgba(120,70,20,.34), transparent 70%),
+    radial-gradient(19% 15% at 66% 50%, rgba(120,70,20,.28), transparent 70%),
+    radial-gradient(15% 13% at 46% 76%, rgba(120,70,20,.24), transparent 70%);
+  mix-blend-mode:multiply;
+}
+
+/* the folded crease down each side of the boat */
+.tray::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg, transparent 11%, rgba(255,255,255,.45) 12.4%, transparent 13.8%),
+    linear-gradient(90deg, transparent 86%, rgba(0,0,0,.24) 87.4%, transparent 88.8%);
+}
+
+/* inside of the boat, seen through the mouth — sits behind the food */
+.tray-mouth{
+  position:absolute;
+  left:12%; right:12%;
+  top:58.5%;
+  height:9%;
+  z-index:2;
+  border-radius:50%;
+  background:linear-gradient(to bottom, #1e1209, #4a2c17 60%, #6b4227);
+  box-shadow:inset 0 calc(.9 * var(--px)) calc(2 * var(--px)) rgba(0,0,0,.65);
+}
+
+/* near rim of the boat — drawn OVER the food so the pile sits *in* the tray */
+.tray-rim{
+  position:absolute;
+  left:12%; right:12%;
+  top:58.5%;
+  height:9%;
+  z-index:9;
+  border-radius:50%;
+  /* keep only the lower arc: the rim closest to the viewer */
+  clip-path:polygon(-2% 50%, 102% 50%, 102% 104%, -2% 104%);
+  background:
+    linear-gradient(100deg, rgba(0,0,0,.32) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 68%, rgba(0,0,0,.40) 100%),
+    conic-gradient(var(--check) 25%, var(--paper) 0 50%, var(--check) 0 75%, var(--paper) 0);
+  background-size:auto, 10.2% 86%;
+  background-position:0 0, 50% 42%;
+  box-shadow:inset 0 calc(-.5 * var(--px)) calc(1.2 * var(--px)) rgba(0,0,0,.36);
+  filter:saturate(.9);
+}
+
+/* ============================================================
+   THE PILE — coordinate box every fry / curd is placed inside
+   ============================================================ */
+
+/* The pile box is deliberately wider than the scene: it spreads the
+   --x values outward so the heap fills the tray, without distorting
+   the fries themselves (they are sized in --px, not in pile %). */
+.pile{
+  position:absolute;
+  left:-4%;
+  top:10%;
+  width:108%;
+  height:58%;
+  z-index:3;
+}
+
+/* gravy soaking the bottom of the pile: soft shadow, never a silhouette */
+.gravy-base{
+  position:absolute;
+  left:16%;
+  top:52%;
+  width:68%;
+  height:48%;
+  z-index:0;            /* must stay behind the fries, which are z-auto */
+  background:radial-gradient(52% 50% at 50% 42%,
+    rgba(48,24,10,.95) 0%,
+    rgba(48,24,10,.72) 46%,
+    rgba(48,24,10,0) 78%);
+  filter:blur(calc(1.6 * var(--px)));
+}
+
+/* ---------- FRIES ----------
+   --x/--y  position in the pile box
+   --r      rotation (0deg = standing on end)
+   --l      length, --w width  (hundredths of the scene)
+   --s      shade nudge, 0 = pale, 1 = well done
+------------------------------------------------- */
+
+.fry{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:calc(var(--w) * var(--px));
+  height:calc(var(--l) * var(--px));
+  transform:translate(-50%,-50%) rotate(var(--r));
+  border-radius:calc(var(--w) * .28 * var(--px));
+  background:
+    /* wet, oily sheen down one edge */
+    linear-gradient(100deg,
+      rgba(255,255,255,.32) 0%,
+      rgba(255,255,255,.08) 18%,
+      rgba(255,255,255,0) 36%,
+      rgba(0,0,0,.12) 74%,
+      rgba(0,0,0,.34) 100%),
+    /* the potato itself */
+    linear-gradient(to bottom,
+      color-mix(in oklab, var(--fry-crisp), var(--fry-deep) calc((1 - var(--s)) * 100%)) 0%,
+      var(--fry-mid) 11%,
+      var(--fry-light) 38%,
+      var(--fry-mid) 76%,
+      color-mix(in oklab, var(--fry-deep), var(--fry-crisp) calc(var(--s) * 100%)) 100%);
+  box-shadow:
+    0 calc(.4 * var(--px)) calc(.9 * var(--px)) rgba(40,18,4,.5),
+    inset 0 0 calc(.6 * var(--px)) rgba(255,236,180,.35);
+}
+
+/* crisped, slightly darker cut ends */
+.fry::before,
+.fry::after{
+  content:"";
+  position:absolute;
+  left:7%; right:7%;
+  height:6%;
+  border-radius:inherit;
+  background:linear-gradient(to bottom, rgba(120,60,10,.34), rgba(90,42,6,.5));
+}
+.fry::before{top:2%}
+.fry::after {bottom:2%}
+
+/* fries lying behind the gravy read cooler and darker */
+.fry.back{filter:brightness(.72) saturate(.88)}
+.fry.mid {filter:brightness(.88)}
+
+/* ---------- CHEESE CURDS ---------- */
+
+.curd{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:calc(var(--d) * var(--px));
+  height:calc(var(--d) * .68 * var(--px));
+  transform:translate(-50%,-50%) rotate(var(--r));
+  border-radius:var(--br,62% 38% 55% 45% / 48% 58% 42% 52%);
+  background:
+    radial-gradient(66% 60% at 36% 26%, var(--curd-light) 0%, var(--curd-mid) 54%, var(--curd-shade) 100%);
+  box-shadow:
+    inset calc(-.35 * var(--px)) calc(-.4 * var(--px)) calc(.8 * var(--px)) rgba(140,116,70,.55),
+    inset calc(.2 * var(--px)) calc(.25 * var(--px)) calc(.5 * var(--px)) rgba(255,255,255,.6),
+    0 calc(.35 * var(--px)) calc(.8 * var(--px)) rgba(40,18,4,.5);
+}
+
+/* the squeaky highlight */
+.curd::before{
+  content:"";
+  position:absolute;
+  left:24%; top:18%;
+  width:30%; height:22%;
+  border-radius:50%;
+  background:rgba(255,255,255,.55);
+  filter:blur(calc(.4 * var(--px)));
+}
+
+/* curds sitting under the gravy are stained at the edges */
+.curd.under{filter:brightness(.78) sepia(.3)}
+
+/* curds on top have started to melt: a soft sagging skirt */
+.curd.melting::after{
+  content:"";
+  position:absolute;
+  left:16%; right:16%;
+  bottom:-22%;
+  height:40%;
+  border-radius:0 0 60% 60% / 0 0 100% 100%;
+  background:linear-gradient(to bottom, var(--curd-mid), rgba(217,201,164,.12));
+  filter:blur(calc(.25 * var(--px)));
+}
+
+/* ============================================================
+   GRAVY — patches draped over the pile, not a lid on it
+   ============================================================ */
+
+.sauce{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:calc(var(--w) * var(--px));
+  height:calc(var(--h) * var(--px));
+  transform:translate(-50%,-50%) rotate(var(--r,0deg));
+  border-radius:var(--br, 54% 46% 38% 62% / 48% 56% 44% 52%);
+  background:
+    /* a broad wet sheen, not a specular dome */
+    radial-gradient(58% 44% at 38% 26%, rgba(214,152,90,.62) 0%, rgba(214,152,90,0) 78%),
+    linear-gradient(155deg, var(--gravy-light) 0%, var(--gravy-mid) 52%, var(--gravy-deep) 100%);
+  box-shadow:
+    inset 0 calc(-.4 * var(--px)) calc(1 * var(--px)) rgba(0,0,0,.34),
+    0 calc(.4 * var(--px)) calc(1.2 * var(--px)) rgba(30,12,2,.5);
+  /* feathered edge so it looks poured over the fries, not laid on them */
+  filter:blur(calc(.3 * var(--px)));
+  mask-image:radial-gradient(closest-side, #000 58%, rgba(0,0,0,.55) 84%, transparent 100%);
+  animation:settle var(--dur,7s) ease-in-out var(--delay,0s) infinite;
+}
+
+@keyframes settle{
+  0%,100%{border-radius:54% 46% 38% 62% / 48% 56% 44% 52%}
+  50%    {border-radius:46% 54% 52% 48% / 56% 44% 56% 44%}
+}
+
+/* runnels of gravy sliding down the front fries.
+   These live outside .sauce on purpose — the mask that feathers a
+   patch's edge would erase a pseudo-element hanging below it. */
+.runnel{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:calc(var(--w) * var(--px));
+  height:calc(var(--h) * var(--px));
+  z-index:8;
+  transform-origin:50% 0;
+  transform:translate(-50%,0) rotate(var(--r));
+  border-radius:50% 50% 46% 54% / 16% 16% 84% 84%;
+  background:linear-gradient(to bottom, rgba(126,72,34,.98), var(--gravy-deep));
+  box-shadow:inset calc(.25 * var(--px)) calc(.2 * var(--px)) calc(.5 * var(--px)) rgba(255,190,130,.28);
+  animation:drip var(--dur,7s) ease-in-out var(--delay,0s) infinite;
+}
+
+@keyframes drip{
+  0%,100%{transform:translate(-50%,0) rotate(var(--r)) scaleY(.72)}
+  50%    {transform:translate(-50%,0) rotate(var(--r)) scaleY(1.16)}
+}
+
+/* ============================================================
+   THE POUR — a ribbon of gravy falling in from off-canvas
+   ============================================================ */
+
+.pour{
+  position:absolute;
+  left:57%;
+  top:-10%;
+  width:calc(2.6 * var(--px));
+  height:41%;
+  z-index:7;
+  transform-origin:50% 0;
+  border-radius:calc(1.3 * var(--px)) calc(1.3 * var(--px)) 46% 54% / calc(3 * var(--px)) calc(3 * var(--px)) 30% 30%;
+  background:linear-gradient(to bottom,
+    var(--gravy-mid) 0%,
+    var(--gravy-light) 20%,
+    var(--gravy-mid) 54%,
+    var(--gravy-deep) 100%);
+  box-shadow:
+    inset calc(.4 * var(--px)) 0 calc(.7 * var(--px)) rgba(255,196,136,.42),
+    inset calc(-.5 * var(--px)) 0 calc(.8 * var(--px)) rgba(0,0,0,.45);
+  animation:pour-wobble 3.4s ease-in-out infinite;
+}
+
+/* the splash where the ribbon meets the pile */
+.pour::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:calc(-1 * var(--px));
+  width:calc(7 * var(--px));
+  height:calc(2.6 * var(--px));
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(60% 60% at 50% 34%, rgba(196,130,68,.85), rgba(58,29,12,0) 76%);
+  filter:blur(calc(.5 * var(--px)));
+  animation:splash 3.4s ease-in-out infinite;
+}
+
+@keyframes pour-wobble{
+  0%,100%{transform:scaleX(1)    skewX(0deg)}
+  35%    {transform:scaleX(.86)  skewX(2.5deg)}
+  70%    {transform:scaleX(1.08) skewX(-2deg)}
+}
+
+@keyframes splash{
+  0%,100%{transform:translateX(-50%) scale(1)}
+  40%    {transform:translateX(-50%) scale(1.18,.84)}
+}
+
+/* a droplet that breaks off the ribbon and falls */
+.droplet{
+  position:absolute;
+  left:57%;
+  top:-4%;
+  width:calc(1.9 * var(--px));
+  height:calc(2.8 * var(--px));
+  z-index:7;
+  border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
+  background:linear-gradient(to bottom, var(--gravy-light), var(--gravy-deep));
+  transform:translateX(-50%);
+  opacity:0;
+  animation:fall 3.4s cubic-bezier(.45,0,.75,.4) var(--delay,0s) infinite;
+}
+
+@keyframes fall{
+  0%      {opacity:0; transform:translate(-50%,0) scaleY(.8)}
+  8%      {opacity:1}
+  62%     {opacity:1; transform:translate(-50%,420%) scaleY(1.35)}
+  72%,100%{opacity:0; transform:translate(-50%,500%) scaleY(.6)}
+}
+
+/* ============================================================
+   CAPTION + CONTROL
+   ============================================================ */
+
+.caption{
+  text-align:center;
+  letter-spacing:.42em;
+  text-transform:uppercase;
+  font-size:clamp(.72rem,1.7vmin,1rem);
+  font-weight:700;
+  color:#f0d1a4;
+  text-shadow:0 .1em .4em rgba(0,0,0,.7);
+  margin:0;
+}
+
+.caption small{
+  display:block;
+  margin-top:.45em;
+  letter-spacing:.16em;
+  font-weight:400;
+  font-size:.78em;
+  color:#c9a781;
+  text-transform:none;
+}
+
+.more{
+  font:inherit;
+  font-size:clamp(.68rem,1.5vmin,.85rem);
+  font-weight:600;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#2a1608;
+  background:linear-gradient(to bottom, var(--fry-light), var(--fry-mid));
+  border:0;
+  border-radius:999px;
+  padding:.6em 1.4em;
+  cursor:pointer;
+  box-shadow:0 .25em .8em rgba(0,0,0,.5), inset 0 .1em 0 rgba(255,255,255,.6);
+  transition:transform .12s ease, filter .12s ease;
+}
+.more:hover{filter:brightness(1.08)}
+.more:active{transform:translateY(2px)}
+.more:focus-visible{outline:3px solid #ffd97a; outline-offset:3px}
+
+/* the extra ladle of gravy, triggered by the button */
+.scene.saucy .sauce{animation:settle var(--dur,7s) ease-in-out infinite, flood .9s ease-out}
+@keyframes flood{
+  0%  {transform:translate(-50%,-50%) rotate(var(--r,0deg)) scale(1)}
+  40% {transform:translate(-50%,-50%) rotate(var(--r,0deg)) scale(1.14,1.2)}
+  100%{transform:translate(-50%,-50%) rotate(var(--r,0deg)) scale(1)}
+}
+
+/* ============================================================
+   MOTION PREFERENCES
+   ============================================================ */
+
+@media (prefers-reduced-motion:reduce){
+  .steam i,.sauce,.runnel,
+  .pour,.pour::after,.droplet,.scene.saucy .sauce{
+    animation:none !important;
+  }
+  .steam i{opacity:.45; transform:translate(-50%,-40%) scale(1.1)}
+  .droplet{opacity:1; transform:translate(-50%,300%)}
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="scene" id="scene" role="img"
+       aria-label="A heaping paper tray of poutine: golden french fries piled high, white cheese curds tucked between them, and a thick ribbon of brown gravy pouring over the top, with steam rising.">
+
+    <!-- steam -->
+    <div class="steam" aria-hidden="true">
+      <i style="--x:38%; --w:13; --h:26; --dur:7.5s;  --delay:0s"></i>
+      <i style="--x:50%; --w:16; --h:32; --dur:9s;    --delay:1.4s"></i>
+      <i style="--x:61%; --w:12; --h:24; --dur:8.2s;  --delay:2.9s"></i>
+      <i style="--x:45%; --w:10; --h:20; --dur:10.5s; --delay:4.3s"></i>
+    </div>
+
+    <!-- inside of the boat, behind the food -->
+    <div class="tray-mouth" aria-hidden="true"></div>
+
+    <!-- the paper boat -->
+    <div class="tray" aria-hidden="true"></div>
+
+    <div class="pile" aria-hidden="true">
+
+      <!-- gravy soaking down into the gaps -->
+      <div class="gravy-base"></div>
+
+      <!-- back row: steeper, cooler, mostly hidden.
+           Rotations deliberately do NOT track x — a pile of fries
+           is a jumble, not a sunburst. -->
+      <i class="fry back" style="--x:32%; --y:44%; --r:-30deg; --l:24; --w:3.0; --s:.7"></i>
+      <i class="fry back" style="--x:39%; --y:33%; --r:12deg;  --l:25; --w:2.9; --s:.4"></i>
+      <i class="fry back" style="--x:47%; --y:27%; --r:-24deg; --l:26; --w:3.2; --s:.55"></i>
+      <i class="fry back" style="--x:55%; --y:30%; --r:38deg;  --l:25; --w:2.9; --s:.3"></i>
+      <i class="fry back" style="--x:63%; --y:36%; --r:-14deg; --l:24; --w:3.0; --s:.65"></i>
+      <i class="fry back" style="--x:69%; --y:44%; --r:22deg;  --l:21; --w:2.8; --s:.45"></i>
+      <i class="fry back" style="--x:28%; --y:50%; --r:-18deg; --l:20; --w:2.9; --s:.6"></i>
+      <i class="fry back" style="--x:43%; --y:38%; --r:64deg;  --l:23; --w:2.7; --s:.35"></i>
+      <i class="fry back" style="--x:52%; --y:35%; --r:-6deg;  --l:24; --w:2.8; --s:.5"></i>
+      <i class="fry back" style="--x:60%; --y:40%; --r:26deg;  --l:23; --w:2.9; --s:.7"></i>
+      <i class="fry back" style="--x:35%; --y:47%; --r:-52deg; --l:22; --w:2.8; --s:.25"></i>
+      <i class="fry back" style="--x:67%; --y:50%; --r:8deg;   --l:21; --w:2.7; --s:.55"></i>
+      <i class="fry back" style="--x:50%; --y:44%; --r:78deg;  --l:22; --w:3.1; --s:.4"></i>
+      <i class="fry back" style="--x:72%; --y:53%; --r:34deg;  --l:18; --w:2.8; --s:.6"></i>
+      <i class="fry back" style="--x:26%; --y:56%; --r:-40deg; --l:18; --w:2.8; --s:.45"></i>
+
+      <!-- middle row: the body of the pile -->
+      <i class="fry mid" style="--x:31%; --y:58%; --r:-24deg; --l:22; --w:3.2; --s:.5"></i>
+      <i class="fry mid" style="--x:36%; --y:53%; --r:20deg;  --l:25; --w:3.1; --s:.75"></i>
+      <i class="fry mid" style="--x:44%; --y:49%; --r:-32deg; --l:26; --w:3.2; --s:.35"></i>
+      <i class="fry mid" style="--x:53%; --y:48%; --r:6deg;   --l:25; --w:3.1; --s:.6"></i>
+      <i class="fry mid" style="--x:61%; --y:52%; --r:-20deg; --l:24; --w:3.2; --s:.45"></i>
+      <i class="fry mid" style="--x:68%; --y:58%; --r:30deg;  --l:21; --w:3.1; --s:.7"></i>
+      <i class="fry mid" style="--x:33%; --y:64%; --r:-56deg; --l:21; --w:2.9; --s:.3"></i>
+      <i class="fry mid" style="--x:49%; --y:56%; --r:34deg;  --l:23; --w:2.9; --s:.55"></i>
+      <i class="fry mid" style="--x:57%; --y:55%; --r:-10deg; --l:24; --w:2.9; --s:.4"></i>
+      <i class="fry mid" style="--x:66%; --y:64%; --r:48deg;  --l:20; --w:2.9; --s:.65"></i>
+      <i class="fry mid" style="--x:27%; --y:65%; --r:-14deg; --l:18; --w:3.0; --s:.5"></i>
+      <i class="fry mid" style="--x:73%; --y:65%; --r:18deg;  --l:18; --w:3.0; --s:.35"></i>
+      <i class="fry mid" style="--x:40%; --y:60%; --r:-16deg; --l:22; --w:2.8; --s:.6"></i>
+      <i class="fry mid" style="--x:60%; --y:60%; --r:14deg;  --l:22; --w:2.8; --s:.45"></i>
+      <i class="fry mid" style="--x:51%; --y:64%; --r:-46deg; --l:21; --w:2.9; --s:.7"></i>
+      <i class="fry mid" style="--x:44%; --y:67%; --r:70deg;  --l:20; --w:2.9; --s:.4"></i>
+      <i class="fry mid" style="--x:38%; --y:71%; --r:-66deg; --l:19; --w:2.9; --s:.55"></i>
+      <i class="fry mid" style="--x:63%; --y:70%; --r:58deg;  --l:19; --w:2.9; --s:.35"></i>
+
+      <!-- curds tucked down inside, stained by the gravy -->
+      <i class="curd under" style="--x:32%; --y:57%; --d:7.4; --r:-14deg"></i>
+      <i class="curd under" style="--x:47%; --y:51%; --d:6.4; --r:22deg;  --br:58% 42% 48% 52% / 52% 46% 54% 48%"></i>
+      <i class="curd under" style="--x:65%; --y:55%; --d:8.0; --r:-8deg"></i>
+      <i class="curd under" style="--x:57%; --y:63%; --d:6.0; --r:34deg;  --br:44% 56% 62% 38% / 58% 42% 58% 42%"></i>
+      <i class="curd under" style="--x:38%; --y:44%; --d:5.6; --r:-26deg"></i>
+      <i class="curd under" style="--x:71%; --y:47%; --d:6.2; --r:12deg;  --br:64% 36% 46% 54% / 42% 62% 38% 58%"></i>
+
+      <!-- ---- gravy draped over the pile in patches ---- -->
+      <b class="sauce" style="--x:36%; --y:59%; --w:26; --h:8;   --r:-7deg;  --dur:7s;   --delay:0s;"></b>
+      <b class="sauce" style="--x:62%; --y:56%; --w:24; --h:7.5; --r:5deg;   --dur:8.4s; --delay:1.1s;
+                              --br:48% 52% 56% 44% / 54% 46% 54% 46%"></b>
+      <b class="sauce" style="--x:48%; --y:69%; --w:30; --h:9;   --r:2deg;   --dur:9.2s; --delay:.5s;"></b>
+      <b class="sauce" style="--x:26%; --y:71%; --w:19; --h:6.5; --r:-12deg; --dur:7.8s; --delay:2.2s;
+                              --br:58% 42% 44% 56% / 46% 58% 42% 54%"></b>
+      <b class="sauce" style="--x:74%; --y:69%; --w:19; --h:6.5; --r:9deg;   --dur:8.8s; --delay:1.7s;"></b>
+      <b class="sauce" style="--x:52%; --y:45%; --w:20; --h:6;   --r:-4deg;  --dur:6.6s; --delay:2.9s;
+                              --br:52% 48% 60% 40% / 44% 60% 40% 56%"></b>
+
+      <!-- front row: fries breaking back out through the gravy -->
+      <i class="fry front" style="--x:30%; --y:78%; --r:-38deg;  --l:20; --w:3.4; --s:.55"></i>
+      <i class="fry front" style="--x:42%; --y:82%; --r:-72deg;  --l:21; --w:3.3; --s:.7"></i>
+      <i class="fry front" style="--x:58%; --y:81%; --r:80deg;   --l:21; --w:3.4; --s:.4"></i>
+      <i class="fry front" style="--x:70%; --y:77%; --r:40deg;   --l:19; --w:3.3; --s:.6"></i>
+      <i class="fry front" style="--x:36%; --y:72%; --r:-28deg;  --l:21; --w:3.1; --s:.3"></i>
+      <i class="fry front" style="--x:52%; --y:74%; --r:16deg;   --l:22; --w:3.1; --s:.65"></i>
+      <i class="fry front" style="--x:64%; --y:71%; --r:-42deg;  --l:21; --w:3.1; --s:.45"></i>
+      <i class="fry front" style="--x:46%; --y:88%; --r:-96deg;  --l:19; --w:3.3; --s:.5"></i>
+      <i class="fry front" style="--x:61%; --y:90%; --r:104deg;  --l:18; --w:3.3; --s:.75"></i>
+      <i class="fry front" style="--x:27%; --y:73%; --r:-20deg;  --l:17; --w:3.1; --s:.35"></i>
+      <i class="fry front" style="--x:74%; --y:72%; --r:24deg;   --l:17; --w:3.1; --s:.6"></i>
+      <i class="fry front" style="--x:49%; --y:77%; --r:56deg;   --l:18; --w:3.0; --s:.5"></i>
+      <i class="fry front" style="--x:55%; --y:66%; --r:-8deg;   --l:21; --w:3.0; --s:.4"></i>
+      <i class="fry front" style="--x:38%; --y:90%; --r:-110deg; --l:17; --w:3.1; --s:.7"></i>
+      <i class="fry front" style="--x:68%; --y:86%; --r:98deg;   --l:17; --w:3.2; --s:.55"></i>
+      <i class="fry front" style="--x:33%; --y:86%; --r:-100deg; --l:17; --w:3.2; --s:.45"></i>
+      <i class="fry front" style="--x:50%; --y:70%; --r:88deg;   --l:19; --w:3.0; --s:.6"></i>
+
+      <!-- curds riding on top of the gravy, going soft -->
+      <i class="curd melting" style="--x:40%; --y:49%; --d:8.4; --r:-12deg"></i>
+      <i class="curd melting" style="--x:60%; --y:45%; --d:7.2; --r:18deg;  --br:56% 44% 60% 40% / 46% 56% 44% 54%"></i>
+      <i class="curd melting" style="--x:49%; --y:59%; --d:8.8; --r:6deg"></i>
+      <i class="curd melting" style="--x:69%; --y:61%; --d:7.0; --r:-22deg; --br:48% 52% 42% 58% / 60% 44% 56% 40%"></i>
+      <i class="curd melting" style="--x:30%; --y:64%; --d:7.2; --r:28deg"></i>
+      <i class="curd"         style="--x:74%; --y:74%; --d:6.0; --r:-6deg;  --br:60% 40% 52% 48% / 44% 58% 42% 56%"></i>
+      <i class="curd"         style="--x:35%; --y:76%; --d:6.4; --r:16deg"></i>
+
+      <!-- a last few ladles of gravy sitting on top of everything -->
+      <b class="sauce top" style="--x:44%; --y:63%; --w:22; --h:6.5; --r:-5deg; --dur:8s;   --delay:1.4s"></b>
+      <b class="sauce top" style="--x:64%; --y:75%; --w:18; --h:6;   --r:7deg;  --dur:9.6s; --delay:.3s;
+                                  --br:50% 50% 58% 42% / 52% 48% 52% 48%"></b>
+      <b class="sauce top" style="--x:34%; --y:81%; --w:19; --h:6;   --r:-9deg; --dur:7.2s; --delay:2.5s"></b>
+      <b class="sauce top" style="--x:56%; --y:68%; --w:20; --h:6;   --r:4deg;  --dur:8.2s; --delay:1.9s;
+                                  --br:56% 44% 46% 54% / 48% 54% 46% 52%"></b>
+      <b class="sauce top" style="--x:40%; --y:72%; --w:17; --h:5.5; --r:-6deg; --dur:6.8s; --delay:.9s"></b>
+
+      <!-- gravy running down the front of the pile -->
+      <b class="runnel" style="--x:34%; --y:76%; --w:3.0; --h:8;   --r:-8deg; --dur:7.4s; --delay:.6s"></b>
+      <b class="runnel" style="--x:50%; --y:82%; --w:3.4; --h:9;   --r:3deg;  --dur:8.6s; --delay:2.1s"></b>
+      <b class="runnel" style="--x:66%; --y:78%; --w:2.8; --h:7.5; --r:6deg;  --dur:9.2s; --delay:1.3s"></b>
+
+    </div>
+
+    <!-- near rim of the boat, drawn over the base of the pile -->
+    <div class="tray-rim" aria-hidden="true"></div>
+
+    <!-- the pour, in front of everything -->
+    <div class="pour" aria-hidden="true"></div>
+    <b class="droplet" style="--delay:1.7s" aria-hidden="true"></b>
+
+  </div>
+
+  <p class="caption">Poutine
+    <small>fries · curds · gravy · pure CSS</small>
+  </p>
+
+  <button class="more" id="more" type="button">Add more gravy</button>
+
+</div>
+
+<script>
+// The sprinkle of JS: one button that pours an extra ladle of gravy.
+// Everything visual is CSS — this only replays an animation and drops
+// another curd on the pile.
+(function () {
+  const scene = document.getElementById('scene');
+  const pile  = scene.querySelector('.pile');
+  const btn   = document.getElementById('more');
+  let extra = 0;
+
+  btn.addEventListener('click', () => {
+    scene.classList.remove('saucy');
+    void scene.offsetWidth;            // restart the animation
+    scene.classList.add('saucy');
+
+    if (extra < 6) {
+      const curd = document.createElement('i');
+      curd.className = 'curd melting';
+      curd.style.cssText =
+        `--x:${30 + Math.random() * 42}%;` +
+        `--y:${46 + Math.random() * 26}%;` +
+        `--d:${7 + Math.random() * 4};` +
+        `--r:${Math.random() * 60 - 30}deg`;
+      pile.appendChild(curd);
+      extra++;
+    }
+    btn.textContent = extra < 6 ? 'Add more gravy' : "That's plenty, friend";
+  });
+})();
+</script>
+
+</body>
+</html>

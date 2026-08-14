@@ -1,0 +1,4 @@
+# Keep the build context small. nginx.conf and the static files are copied
+# explicitly in the Dockerfile, so nothing else needs to be sent.
+Dockerfile
+.dockerignore

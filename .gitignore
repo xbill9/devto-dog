@@ -1,0 +1,4 @@
+# nothing is built here — these are just the usual suspects
+.DS_Store
+node_modules/
+*.log
