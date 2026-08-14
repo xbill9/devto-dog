@@ -1,174 +1,145 @@
-# Poutine — DEV Frontend Challenge: Comfort Food Edition
+# Dog or Not
 
-Two submissions, one subject.
+A live-video security scanner with one job: you hold something up to the camera,
+say **"scan"**, and it tells you whether it is a dog. If it is, it barks.
 
-| | |
+It is deliberately not charming about it. The scanner is a cold
+threat-assessment system that happens to have been pointed at dogs, and the
+entire joke is that it does not know it is making one.
+
+> Built for the [DEV Weekend Challenge: Dog Days Edition](https://dev.to/challenges/weekend-2026-08-13).
+
+## Credit where it is due
+
+This is a fork of **[way-back-home/level_3_new](https://github.com/xbill9/way-back-home)**,
+which was the same scanner counting fingers for a biometric handshake. The
+multimodal plumbing — bidirectional WebSocket, 1 FPS video, local wake-word
+detection, the accuracy harness, the Cloud Run deploy chain — came from there
+and is the reason this exists at all in a weekend.
+
+What is new here: the classifier and its tools, the verdict UI, the bark pack,
+the containment-breach easter egg, the fixture portal, and the ingest and
+publish-safety scripts.
+
+## How it works
+
+```
+phone/photo → webcam → 1 FPS JPEG ─┐
+                                   ├─→ Gemini Live (ADK) ─→ report_verdict() ─→ UI + bark
+             "scan" ───────────────┘
+             (Web Speech API, stays in the browser)
+```
+
+The microphone never reaches the model. Its only job is catching the word
+"scan", and doing that in the browser rather than over the wire saves about two
+thirds of the uplink — continuous audio also reads to the Live API as a user
+turn that never ends, which stops the model taking turns of its own. Measured:
+0/5 with speech in the room, 5/5 for the identical prompts sent as text.
+
+The verdict comes back as a **tool call**, not prose to be parsed:
+
+```python
+report_verdict(is_dog=False, confidence=71, subject="grey wolf")
+```
+
+A wolf is not a dog. Neither is a plush one, a statue, a cartoon, or a person in
+a costume. That is a choice rather than a fact, and it is the choice that makes
+the eval interesting instead of a formality — "is this a dog" is otherwise
+solved zero-shot and there is nothing to measure.
+
+Judging is on the **subject depicted, never the medium**. Photographs on a phone
+screen are the expected mode of operation, so a photo of a real dog is a dog.
+
+### Easter eggs
+
+| Trigger | Result |
 |---|---|
-| **CSS Art: Comfort Food** | `css-art/` — a tray of poutine drawn with no images, no SVG, no canvas |
-| **Perfect Landing: Comfort Food** | `landing/` — *Gravy Boat*, a poutinerie landing page that reuses the artwork as its hero |
+| A cat | Fatal system error. Scanner integrity lost. |
+| Three or more dogs in one frame | **Containment breach**, announced in whichever of nine languages is selected |
 
-**Live**, deployed from `main` by `.github/workflows/pages.yml`:
+The breach announcement is translated by the model itself rather than read from
+a shipped phrasebook — so it is real evidence the model is being called, in a
+way a recording could not fake.
 
-| | |
-|---|---|
-| Landing page | <https://xbill9.github.io/devto-poutine/> |
-| Standalone artwork | <https://xbill9.github.io/devto-poutine/css-art/> |
-| One-click "open in CodePen" | <https://xbill9.github.io/devto-poutine/new-pen.html> |
-
-CodePen has no write API and no API key — the only programmatic route is its
-documented [prefill](https://blog.codepen.io/documentation/prefill/) form, which
-POSTs the code to `codepen.io/pen/define` and lands you on a new Pen with every
-panel filled in. `tools/make-prefill.py` builds that button from
-`css-art/codepen/pen.*` at deploy time, so it can't drift. Sign in to CodePen,
-click the button, hit **Save**.
-
-Finished posts for both categories are in [`posts/`](posts/); the pre-flight
-checklist is [`SUBMISSION.md`](SUBMISSION.md). Licensed MIT.
-
----
-
-## `css-art/` — the artwork
-
-```
-css-art/
-  index.html          standalone, self-contained — open it in a browser
-  codepen/
-    pen.html          → CodePen HTML panel
-    pen.css           → CodePen CSS panel
-    pen.js            → CodePen JS panel
-```
-
-50 fries, 13 curds, 11 gravy patches, a pouring ribbon and four steam wisps.
-Every edible object is an `<i>` or `<b>` positioned with custom properties:
-
-```html
-<i class="fry" style="--x:44%; --y:49%; --r:-32deg; --l:26; --w:3.2; --s:.35"></i>
-```
-
-`--x/--y` place it · `--r` rotates it (`0deg` = on end) · `--l/--w` size it ·
-`--s` is how well done it is.
-
-**Sizing.** The scene defines its own unit so the dish scales as a single object
-rather than drifting with the viewport:
-
-```css
-.scene{
-  --u:  min(86vw, 78vh, 620px);  /* the artwork's edge length */
-  --px: calc(var(--u) / 100);    /* one hundredth of it */
-}
-```
-
-Everything inside is expressed in `--px`. Changing `--u` rescales the whole dish.
-
-The only JavaScript is the *Add more gravy* button — roughly twenty lines that
-replay one animation and append a curd.
-
-## `landing/` — Gravy Boat
-
-```
-landing/
-  index.html
-  styles.css
-  app.js
-```
-
-No build step, no dependencies. Open `index.html` over HTTP (`app.js` is an ES
-module, so `file://` will block it — see *Running locally*).
-
-Sections: hero with the gravy slider · how it's built · filterable menu ·
-hours + location + signup · FAQ.
-
-### Accessibility
-
-Verified, not assumed:
-
-- **Contrast** — lowest pair on the page is **7.74:1** (muted text over the warm
-  hero gradient, composited); everything else clears AAA.
-- **Menu filter** — real `<button>`s with `aria-pressed`, results announced
-  through a `role="status"` region.
-- **Gravy slider** — carries `aria-valuetext` ("Classic gravy") so it announces
-  words rather than `0–3`.
-- **Mobile nav** — `aria-expanded`, Escape closes it *and* restores focus to the
-  toggle.
-- **Form** — `aria-describedby` / `aria-invalid`, focus moves to the error,
-  success lands in a live region.
-- Skip link · single `<h1>` · no heading-level jumps · real landmarks ·
-  `<table>` with `<caption>` and `scope` · one `:focus-visible` treatment.
-- **`prefers-reduced-motion`** collapses all animation while leaving the artwork
-  in a legible resting state.
-
-### Progressive enhancement
-
-With JavaScript disabled the nav is a plain list, all eight dishes show, the
-poutine renders at its default gravy level, and the form falls back to native
-validation.
-
----
-
-## Running locally
+## Running it
 
 ```bash
-cd landing
-python3 -m http.server 8000
-# → http://localhost:8000
+./init.sh              # one-time: project and API key
+./frontend.sh          # build the UI
+./runadk.sh            # backend on :8080
+
+npm --prefix frontend run dev   # or Vite on :5173 for development
 ```
 
-The CSS art needs no server: `open css-art/index.html`.
+`./mock.sh` runs a mock backend that simulates the model, so the UI can be
+worked on without billing a Live session.
 
-## Deploying the landing page to Cloud Run
+### The fixture portal
 
-`landing/` ships a working `Dockerfile` and `nginx.conf`. The one thing that
-catches people out: **Cloud Run routes traffic to `$PORT` (8080), but the stock
-`nginx` image listens on 80**, so a naive `FROM nginx:alpine` deploy fails its
-health check. `nginx.conf` here listens on 8080 for that reason.
+`http://localhost:5173/portal.html` — the eval fixtures as a full-bleed,
+swipeable gallery, for a phone held up to the webcam. Vite binds all interfaces,
+so the phone reaches it at `http://<your-ip>:5173/portal.html`.
+
+Ground truth is withheld unless you press **truth**. Anything the page shows is
+inside the camera's field of view, and a scanner that scores well because it
+read "grey wolf" off the screen has measured the font.
+
+Expect the phone path to score worse than the harness. It adds glare, moiré,
+refresh banding and a bezel. That is the demo condition, not a regression.
+
+### Adding fixtures
 
 ```bash
-cd landing
-gcloud auth login                     # if your tokens have expired
-gcloud config set project YOUR_PROJECT
-
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
-                       artifactregistry.googleapis.com
-
-gcloud run deploy gravy-boat \
-  --source . \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 128Mi \
-  --max-instances 3
+./scripts/ingest_fixtures.py ~/photos/dogs --label dog
+./scripts/ingest_fixtures.py ~/photos/statues --label notdog --subject "bronze statue"
 ```
 
-Cloud Run scales to zero, so an idle demo costs nothing beyond a little
-Artifact Registry storage for the image. `--max-instances` caps the blast
-radius if the post does well.
+Strips EXIF — phone photos carry GPS, and these are published — caps the long
+edge, and names files as the ground-truth contract (`dog_*.jpg` / `notdog_*.jpg`).
 
-Verify the deploy before embedding it:
+**Frame at least half of them the way a phone actually presents them**: held up,
+small in frame. The previous build shipped a video resolution chosen from a
+fixture set where every subject filled the frame, and it made real-world
+accuracy visibly worse.
+
+## Measuring it
 
 ```bash
-URL=$(gcloud run services describe gravy-boat --region us-central1 \
-        --format='value(status.url)')
-curl -sI "$URL" | head -1          # expect HTTP/2 200
+./scripts/scan_accuracy.py                    # baseline
+./scripts/scan_accuracy.py --lighting dark    # one degraded condition
+./scripts/scan_accuracy.py --matrix --json out.json
 ```
 
-Then put that URL in the post:
+Drives the real WebSocket endpoint with fixture images and a text stimulus, then
+scores what the model did against known ground truth, with bandwidth and latency
+accounting. **Billed**: one real Live session per condition.
 
-```
-{% embed https://gravy-boat-xxxxxxxx-uc.a.run.app %}
-```
+`make test` stubs the model entirely, so it cannot see model behaviour at all.
+This is the only thing here that measures the model rather than the plumbing.
 
-DEV renders it in an iframe, so viewers scroll the landing page inside a
-window rather than seeing it full-bleed.
-
-### Testing the container locally first
+## Deploying
 
 ```bash
-cd landing
-docker build -t gravy-boat .
-docker run --rm -p 8085:8080 gravy-boat
-# → http://localhost:8085
+make deploy          # Cloud Run, via deploy.sh
 ```
 
-### Or skip Cloud Run entirely
+`make test` and `make deploy` both run `scripts/check_no_eap.sh` first, which
+fails if anything git would publish names a non-public model. The model id comes
+from `MODEL_ID` and defaults to GA; the tree never names anything else.
 
-It is three static files with no build step, so Netlify, Vercel, GitHub Pages
-or Cloudflare Pages all work, and DEV's `{% embed %}` accepts any URL.
+**The scanner prints its live model id in the header**, deliberately — it proves
+which model is behind the glass. That also means a screen recording made against
+a non-public model publishes the id in pixels, where no repo scan can catch it.
+Record with `MODEL_ID` unset.
+
+## Credits
+
+Sound effects generated with **[ElevenLabs](https://elevenlabs.io)**. Barks are
+produced at build time by `scripts/generate_barks.py` and bundled — nothing here
+calls a sound API at runtime, so the bark adds no latency to the response path
+and cannot fail during a session.
+
+The build diary is in [`BUILD-LOG.md`](BUILD-LOG.md), written tick by tick as
+the thing was built. It is the honest version, including the parts that broke.
+
+MIT.

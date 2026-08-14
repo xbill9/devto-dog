@@ -2,3 +2,25 @@
 .DS_Store
 node_modules/
 *.log
+
+# Never published. These carry the model id and Live API notes for a model whose
+# access is allowlisted; the repo goes public in the submission. See BUILD-LOG.md
+# task #11 and scripts/check_no_eap.sh, which enforces this.
+.env
+.env.*
+CLAUDE.md
+GEMINI.md
+.gemini/
+
+# Python / pytest / ruff
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.requirements_installed
+
+# Frontend build output
+frontend/dist/
+
+# Staging for fetch_public_fixtures.py; the ingested copies are what ship.
+tests/fixtures/_incoming/

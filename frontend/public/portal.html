@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixture Portal</title>
+<!--
+  A phone held up to the webcam, cycling the same fixtures the accuracy harness
+  scores. Plain HTML on purpose: it has to survive being opened on whatever
+  phone is in the room, and it must never depend on the React bundle building.
+
+  THE ONE RULE: nothing but the image is on screen during a scan. Any text here
+  is text in the camera's field of view, and the model reads it. A run that
+  scores well because the scanner read "grey wolf" off the screen has measured
+  the font, not the model. The label is behind a tap, the counter fades, and
+  ground truth is not even fetched until you ask for it.
+
+  Screen brightness matters more than anything else here -- turn it up. And
+  expect this path to score worse than the harness: it adds glare, moire,
+  refresh banding and a bezel. That is the demo condition, not a regression.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%; background: #000; color: #fff; overflow: hidden;
+    font: 500 15px/1.4 ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; display: grid; place-items: center; }
+  #shot { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+  /* Hit targets rather than visible buttons: invisible halves of the screen, so
+     a thumb can advance the set without putting a control in frame. */
+  .tap { position: fixed; top: 0; bottom: 0; width: 38%; z-index: 5; }
+  .tap.prev { left: 0; }
+  .tap.next { right: 0; }
+
+  /* Everything below fades out and stays out. `pointer-events: none` so a faded
+     overlay never eats a tap. */
+  .chrome {
+    position: fixed; z-index: 10; pointer-events: none;
+    opacity: 0; transition: opacity .25s ease;
+    text-shadow: 0 1px 3px #000;
+  }
+  body.awake .chrome { opacity: .85; }
+  #counter { top: env(safe-area-inset-top, 8px); left: 12px; font-variant-numeric: tabular-nums; }
+  #hint { bottom: calc(env(safe-area-inset-bottom, 8px) + 6px); left: 12px; right: 12px; font-size: 13px; opacity: .6; }
+
+  /* The reveal. Deliberately loud, deliberately opt-in, and it hides itself
+     again on the next image so it can never be left on by accident. */
+  #truth {
+    position: fixed; z-index: 20; left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+    text-align: center; display: none;
+    background: #b00020; padding: 10px 8px; font-weight: 800; letter-spacing: .04em;
+  }
+  #truth.on { display: block; }
+  #reveal {
+    position: fixed; z-index: 20; top: env(safe-area-inset-top, 8px); right: 8px;
+    background: #222; color: #999; border: 1px solid #444; border-radius: 6px;
+    padding: 10px 14px; font: inherit; font-size: 13px;
+  }
+  #empty { padding: 24px; text-align: center; color: #888; max-width: 34rem; }
+  #empty code { color: #ddd; }
+</style>
+</head>
+<body>
+
+<div id="stage"><img id="shot" alt=""></div>
+
+<div class="tap prev" id="tapPrev"></div>
+<div class="tap next" id="tapNext"></div>
+
+<div class="chrome" id="counter"></div>
+<div class="chrome" id="hint">tap right / left &middot; arrow keys &middot; brightness up</div>
+
+<button id="reveal" type="button">truth</button>
+<div id="truth"></div>
+
+<script>
+(() => {
+  const img = document.getElementById('shot');
+  const counter = document.getElementById('counter');
+  const truthBar = document.getElementById('truth');
+  const stage = document.getElementById('stage');
+
+  let items = [];
+  let i = 0;
+  let truth = null;   // fetched only when the presenter asks
+  let sleep;
+
+  // Chrome shows on interaction and fades after a beat, so the steady state is
+  // an image and nothing else.
+  function wake() {
+    document.body.classList.add('awake');
+    clearTimeout(sleep);
+    sleep = setTimeout(() => document.body.classList.remove('awake'), 1600);
+  }
+
+  function show(n) {
+    if (!items.length) return;
+    i = (n + items.length) % items.length;
+    img.src = items[i].url;
+    counter.textContent = `${i + 1} / ${items.length}`;
+    // Any reveal belongs to the image that was on screen when it was asked for.
+    truthBar.classList.remove('on');
+    wake();
+  }
+
+  document.getElementById('tapNext').onclick = () => show(i + 1);
+  document.getElementById('tapPrev').onclick = () => show(i - 1);
+  addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') show(i + 1);
+    if (e.key === 'ArrowLeft') show(i - 1);
+  });
+
+  // Swipe, because a phone in a hand is held not tapped.
+  let x0 = null;
+  addEventListener('touchstart', (e) => { x0 = e.changedTouches[0].clientX; }, { passive: true });
+  addEventListener('touchend', (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 45) show(i + (dx < 0 ? 1 : -1));
+    x0 = null;
+  }, { passive: true });
+
+  document.getElementById('reveal').onclick = async () => {
+    if (!items.length) return;
+    if (!truth) {
+      const r = await fetch('/api/fixtures?reveal=1');
+      const d = await r.json();
+      truth = Object.fromEntries(d.fixtures.map((f) => [f.name, f.truth || {}]));
+    }
+    const t = truth[items[i].name] || {};
+    truthBar.textContent =
+      `${t.is_dog ? 'DOG' : 'NOT A DOG'}${t.subject ? ' — ' + t.subject : ''}`;
+    truthBar.classList.toggle('on');
+  };
+
+  fetch('/api/fixtures')
+    .then((r) => r.json())
+    .then((d) => {
+      items = d.fixtures || [];
+      if (!items.length) {
+        stage.innerHTML =
+          '<div id="empty">No fixtures yet.<br><br>' +
+          '<code>./scripts/ingest_fixtures.py &lt;folder&gt; --label dog</code>' +
+          '<br><br>Then reload.</div>';
+        document.getElementById('reveal').style.display = 'none';
+        return;
+      }
+      show(0);
+    })
+    .catch(() => {
+      stage.innerHTML = '<div id="empty">Could not reach /api/fixtures.</div>';
+    });
+})();
+</script>
+</body>
+</html>
