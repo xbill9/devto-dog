@@ -808,7 +808,9 @@ async def websocket_endpoint(
                     logger.info("CONTAINMENT BREACH: MULTIPLE CANINES")
                     hm_msg = {
                         "type": "heavy_metal",
-                        "message": "CONTAINMENT BREACH. THE DOGS ARE OUT.",
+                        # The words the scanner speaks, not the song the agent
+                        # instruction forbids it from quoting.
+                        "message": "CONTAINMENT HAS FAILED. THE DOGS HAVE BEEN RELEASED.",
                     }
                     await websocket.send_text(json.dumps(hm_msg))
 

@@ -38,7 +38,8 @@ def report_verdict(is_dog: bool, confidence: int, subject: str):
     """
     now = time.monotonic()
     repeat = (
-        _last_report["is_dog"] == is_dog and (now - _last_report["at"]) < _REPEAT_WINDOW_S
+        _last_report["is_dog"] == is_dog
+        and (now - _last_report["at"]) < _REPEAT_WINDOW_S
     )
     _last_report.update(is_dog=is_dog, at=now)
 
@@ -83,7 +84,14 @@ def trigger_heavy_metal_mode():
     """
     print("\n[SERVER-SIDE TOOL EXECUTION] CONTAINMENT BREACH: MULTIPLE CANINES\n")
     sys.stdout.flush()
-    return {"status": "success", "message": "Containment breach. The dogs are out."}
+    # The tool result goes back to the model, so its wording is a suggestion
+    # about what to say next. This used to hand back "The dogs are out" -- the
+    # song line rule 4 forbids -- one turn before asking for the pinned
+    # announcement. Return the pinned words instead of competing with them.
+    return {
+        "status": "success",
+        "message": "Containment has failed. The dogs have been released.",
+    }
 
 
 # The two GA defaults, which are not the same model and cannot be.

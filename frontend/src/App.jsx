@@ -1,9 +1,9 @@
-import BiometricLock from './BiometricLock';
+import DogScanner from './DogScanner';
 
 function App() {
   return (
     <div className="w-full h-screen bg-black">
-      <BiometricLock />
+      <DogScanner />
     </div>
   );
 }

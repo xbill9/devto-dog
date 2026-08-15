@@ -71,10 +71,16 @@ class TestBiometricAgent(unittest.TestCase):
         self.assertIn("Feline", result["message"])
 
     def test_trigger_heavy_metal_mode(self):
-        """Test that the containment breach returns the correct success structure."""
+        """Test that the containment breach returns the correct success structure.
+
+        The message is pinned to the announcement rule 4 asks the model to speak.
+        A tool result is a suggestion about what to say next, and this one used
+        to hand back the song line the same instruction forbids.
+        """
         result = trigger_heavy_metal_mode()
         self.assertEqual(result["status"], "success")
-        self.assertIn("Containment breach", result["message"])
+        self.assertIn("Containment has failed", result["message"])
+        self.assertNotIn("dogs are out", result["message"].lower())
 
     def test_get_model_id_default(self):
         """Falls back to a GA model when MODEL_ID is unset.

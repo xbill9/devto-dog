@@ -814,14 +814,18 @@ export function useGeminiSocket(
         // A timer, not requestAnimationFrame: rAF stops dead in a hidden tab,
         // so tabbing away killed video while the mic kept streaming and
         // detection silently stopped. Timers only clamp to ~1s in background.
+        // Resolves once the frame is actually on the wire, so a caller that
+        // needs the model to have seen it can wait. The periodic loop ignores
+        // the promise; requestScan does not -- see the burst below.
         const captureOnce = () => {
-          if (ws.current?.readyState === WebSocket.OPEN) {
-            ctx.drawImage(videoElement, 0, 0, width, height);
+          if (ws.current?.readyState !== WebSocket.OPEN) return Promise.resolve();
+          ctx.drawImage(videoElement, 0, 0, width, height);
 
-            // Optimized: toBlob is async and doesn't block the main thread like toDataURL
+          // Optimized: toBlob is async and doesn't block the main thread like toDataURL
+          return new Promise((resolve) => {
             canvas.toBlob(
               (blob) => {
-                if (!blob) return;
+                if (!blob) return resolve();
                 blob.arrayBuffer().then((buffer) => {
                   frameCount++;
                   if (frameCount % 10 === 0) {
@@ -837,13 +841,13 @@ export function useGeminiSocket(
                     meter.frames += 1;
                     meter.lastFrameAt = performance.now();
                   }
-                });
+                  resolve();
+                }, resolve);
               },
               "image/jpeg",
               quality,
             );
-          }
-
+          });
         };
 
         // A frame taken at the moment the wake word fires, which is the one
@@ -860,8 +864,27 @@ export function useGeminiSocket(
         // uplink for the entire session. This spends two frames per scan
         // instead, on the only frames that were ever going to decide the
         // answer. People pose, then speak.
+        //
+        // Returns a promise that settles when every burst frame has been sent,
+        // because "frames first" was only true in the source order. Both frames
+        // were scheduled on setTimeout and encoded asynchronously, while the
+        // scan text went out synchronously in the same tick -- so the text
+        // reliably beat both of them onto the socket, and the model answered
+        // from whatever periodic frame happened to precede it, up to a second
+        // stale and usually taken mid-raise. That is the frame the model calls
+        // "blurry, partially off-screen", and the reply is "Stabilize subject."
+        // -- a wasted round trip, blamed on the model, that the burst existed to
+        // prevent. Waiting costs one gap plus the JPEG encode, ~150ms.
         captureBurstRef.current = (count = 2, gapMs = 120) => {
-          for (let i = 0; i < count; i++) setTimeout(captureOnce, i * gapMs);
+          const sent = [];
+          for (let i = 0; i < count; i++) {
+            sent.push(
+              new Promise((resolve) =>
+                setTimeout(() => captureOnce().then(resolve, resolve), i * gapMs),
+              ),
+            );
+          }
+          return Promise.all(sent);
         };
 
         const captureFrame = () => {
@@ -913,9 +936,13 @@ export function useGeminiSocket(
    * with the request, so ordering is guaranteed and the model has the subject
    * in hand before it is asked about it.
    */
-  const requestScan = useCallback((source = "button") => {
+  const requestScan = useCallback(async (source = "button") => {
     if (ws.current?.readyState !== WebSocket.OPEN) return "closed";
-    captureBurstRef.current?.();
+    // Awaited, not fired and forgotten: ordering on one socket is guaranteed
+    // only for frames that have actually been sent, and the burst is async all
+    // the way down. See captureBurstRef for what sending the text first did.
+    await captureBurstRef.current?.();
+    if (ws.current?.readyState !== WebSocket.OPEN) return "closed";
     const outcome = scanScheduler.current
       ? scanScheduler.current.request()
       : (ws.current.send(JSON.stringify({ type: "text", text: "scan" })), "sent");

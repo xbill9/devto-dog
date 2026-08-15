@@ -38,11 +38,76 @@ const SAMPLE_EVENTS = [
     { t: SAMPLE_EPOCH + 85000, kind: 'you', text: '"scan" \u2192 2 frames + scan' },
     { t: SAMPLE_EPOCH + 85800, kind: 'tool', text: 'report_verdict({"is_dog":true,"subject":"golden retriever"})' },
     { t: SAMPLE_EPOCH + 85900, kind: 'match', text: 'dog \u2014 golden retriever' },
-    { t: SAMPLE_EPOCH + 87000, kind: 'scanner', text: 'Canine confirmed.' },
+    // "Woof." -- what the scanner actually says on a dog (agent.py rule 6). The
+    // sample used to read "Canine confirmed.", a line no build has ever spoken.
+    { t: SAMPLE_EPOCH + 87000, kind: 'scanner', text: 'Woof.' },
     { t: SAMPLE_EPOCH + 89000, kind: 'mic', text: 'gated' },
 ];
 
-export default function BiometricLock() {
+// The idle screen's only piece of identity. A targeting reticle with a dog
+// inside it, because "Canine Verification Interrogator" is the joke and the
+// screen should be in on it before anyone presses a button -- until now the
+// idle state was a select and a button on black, indistinguishable from the
+// finger build it grew out of. Inline SVG rather than an asset: the deployed
+// page runs under a strict CSP and the last hotlinked graphic in this project
+// 404'd silently.
+function ScannerReticle({ className = '' }) {
+    return (
+        <svg viewBox="0 0 120 120" className={className} aria-hidden="true" fill="none">
+            {/* Reticle ring + corner ticks */}
+            <circle cx="60" cy="60" r="54" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" />
+            <circle cx="60" cy="60" r="44" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="6 10" />
+            <path d="M60 2v14M60 104v14M2 60h14M104 60h14" stroke="currentColor" strokeOpacity="0.7" strokeWidth="2" />
+            {/* Dog head, as a silhouette -- at 9rem a detailed breed reads as
+                noise. Built from ellipses rather than one clever path, because
+                the first attempt was a single hand-authored path and it
+                rendered a cat: upright triangular ears, round face, no muzzle.
+                A cat is this app's *failure* state, so the mark has to be
+                unmistakable. Drop ears and a protruding muzzle are what carry
+                that; ears drawn first so the skull overlaps their tops. */}
+            <g transform="translate(60 58)" fill="currentColor">
+                <ellipse cx="-20" cy="2" rx="8" ry="19" />
+                <ellipse cx="20" cy="2" rx="8" ry="19" />
+                <ellipse cx="0" cy="-5" rx="19" ry="16" />
+                <ellipse cx="0" cy="12" rx="13" ry="10" />
+                <circle cx="-8" cy="-7" r="3" fill="#000" />
+                <circle cx="8" cy="-7" r="3" fill="#000" />
+                <ellipse cx="0" cy="8" rx="5" ry="3.8" fill="#000" />
+            </g>
+        </svg>
+    );
+}
+
+// The scanning screen's dog mark. Same lesson as the reticle above: four toes
+// and a pad from plain ellipses, not one clever path -- at 2rem the silhouette
+// is all that survives, and a paw is only legible as "four small shapes over
+// one big one". `barred` struck through is the NOT-A-DOG variant, so the two
+// verdicts differ in shape and not only in colour (the screen is filmed, and
+// red/green alone is the one distinction a colourblind viewer loses).
+function PawPrint({ className = '', barred = false }) {
+    return (
+        <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+            <g fill="currentColor">
+                <ellipse cx="18" cy="46" rx="10" ry="13" transform="rotate(-20 18 46)" />
+                <ellipse cx="38" cy="29" rx="10.5" ry="14" transform="rotate(-8 38 29)" />
+                <ellipse cx="62" cy="29" rx="10.5" ry="14" transform="rotate(8 62 29)" />
+                <ellipse cx="82" cy="46" rx="10" ry="13" transform="rotate(20 82 46)" />
+                <ellipse cx="50" cy="72" rx="24" ry="19" />
+            </g>
+            {barred && (
+                <>
+                    {/* Cut a gap first, or a same-coloured bar over a
+                        same-coloured paw is invisible. Black, because every
+                        surface this sits on is the page's black. */}
+                    <path d="M10 90 L90 10" stroke="#000" strokeWidth="17" strokeLinecap="round" />
+                    <path d="M10 90 L90 10" stroke="currentColor" strokeWidth="9" strokeLinecap="round" />
+                </>
+            )}
+        </svg>
+    );
+}
+
+export default function DogScanner() {
     // No sequence, no countdown, no win condition. The finger build was a lock
     // you had to open in 65 seconds; this is a scanner you hold things up to
     // until you get bored, so SCANNING is a resting state rather than a round.
@@ -84,7 +149,22 @@ export default function BiometricLock() {
     // window.location.host includes the port if present.
     // Layout of the telemetry panels can be checked without a session, and
     // without a webcam or a billed connection, via ?hud=1.
-    const forceHud = new URLSearchParams(window.location.search).has('hud');
+    //
+    // `?hud` also selects WHICH screen to lay out, because the scanning screen
+    // needs a camera, a granted permission and a billed session to reach --
+    // which is exactly the reason its layout had never been checked, and why a
+    // paw print in the footer silently wrapped "CONTINUOUS SURVEILLANCE" onto
+    // two lines. `1` is the idle screen as before; `scan`, `dog` and `notdog`
+    // are the three states of the centre panel. Preview only: no socket, no
+    // camera, and the real screens are untouched.
+    const hudParam = new URLSearchParams(window.location.search).get('hud');
+    const forceHud = hudParam !== null;
+    const previewScreen = ['scan', 'dog', 'notdog'].includes(hudParam) ? hudParam : null;
+    const previewVerdict = previewScreen === 'dog'
+        ? { isDog: true, subject: 'golden retriever', confidence: 94 }
+        : previewScreen === 'notdog'
+            ? { isDog: false, subject: 'grey wolf', confidence: 71 }
+            : null;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const buildWsUrl = (id) =>
         `${protocol}//${window.location.host}/ws/user1/${id}?lang=${encodeURIComponent(language)}`;
@@ -110,7 +190,7 @@ export default function BiometricLock() {
         onDropped: () => {
             if (statusRef.current !== 'SCANNING') return;
             if (dropCount.current >= 3) {
-                console.error('[BiometricLock] giving up after 3 dropped sessions');
+                console.error('[DogScanner] giving up after 3 dropped sessions');
                 return;
             }
             dropCount.current += 1;
@@ -123,6 +203,10 @@ export default function BiometricLock() {
             setStatus('HEAVY_METAL');
         }
     });
+
+    // The real verdict, or the preview one under ?hud=dog / ?hud=notdog. Never
+    // both: previewVerdict is null unless the URL asked for it.
+    const shownVerdict = verdict ?? previewVerdict;
 
     const [reviewOpen, setReviewOpen] = useState(false);
     // ?hud=1 substitutes sample data so the panels can be laid out without a
@@ -335,8 +419,8 @@ export default function BiometricLock() {
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
                     <div className="text-center border border-red-500 p-10 rounded bg-red-950/20 box-shadow-xl">
                         <h1 className="text-4xl font-bold text-red-500 mb-4 animate-pulse">ACCESS DENIED</h1>
-                        <p className="text-xl text-red-300 mb-8">BIOMETRIC SENSOR OFFLINE</p>
-                        <p className="text-sm text-gray-400 mb-8">Camera access required for neural handshake.</p>
+                        <p className="text-xl text-red-300 mb-8">OPTICAL SENSOR OFFLINE</p>
+                        <p className="text-sm text-gray-400 mb-8">Camera access required to scan subjects.</p>
                         <button
                             onClick={() => setPermissionDenied(false)}
                             className="px-6 py-2 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
@@ -351,7 +435,7 @@ export default function BiometricLock() {
             {showInitiation && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
                     <div className="text-center max-w-2xl px-8">
-                        <h1 className="text-4xl font-bold text-yellow-500 mb-6 animate-pulse">INITIALIZING NEURAL LINK...</h1>
+                        <h1 className="text-4xl font-bold text-yellow-500 mb-6 animate-pulse">INITIALIZING SCANNER...</h1>
                         <div className="text-xl text-yellow-200/80 mb-8 space-y-4 font-mono">
                             <p>ESTABLISHING SECURE CHANNEL.</p>
                             <p className="border-t border-b border-yellow-500/30 py-4">
@@ -373,11 +457,19 @@ export default function BiometricLock() {
                             SYSTEM ERROR
                         </h1>
                         <div className="h-1 w-full bg-red-600 mb-8"></div>
+                        {/* Says what actually happened. Only one thing reaches
+                            this screen -- agent.py's trigger_system_error(),
+                            whose whole trigger is "a cat is presented" -- and
+                            the copy here blamed an OFFENSIVE GESTURE, which is
+                            the finger build's fail state and impossible in a
+                            scanner with no gestures. Someone holds up a cat and
+                            the machine cited them for rudeness. The reason line
+                            is the tool's own return string. */}
                         <p className="text-2xl text-red-400 font-bold mb-4 uppercase">
-                            Neural Link Corruption Detected
+                            Feline Detected
                         </p>
                         <p className="text-lg text-red-500/80 mb-12 font-mono">
-                            REASON: CRITICAL PROTOCOL VIOLATION (OFFENSIVE GESTURE)
+                            REASON: FELINE INTRUSION // SCANNER INTEGRITY LOST
                         </p>
                         <div className="text-sm text-red-700 animate-pulse">
                             TERMINATING SESSION...
@@ -403,8 +495,15 @@ export default function BiometricLock() {
                             CONTAINMENT BREACH
                         </h1>
                         <div className="h-2 w-full bg-gradient-to-r from-transparent via-red-600 to-transparent mb-8"></div>
+                        {/* The words the scanner actually speaks (agent.py rule
+                            4): "Alert. Containment has failed. The dogs have
+                            been released." This read THE DOGS ARE OUT, which is
+                            the song -- the exact reference the instruction below
+                            forbids the model from making, printed six inches
+                            above it in 4xl. The screen and the voice now say the
+                            same thing, and neither of them is quoting anybody. */}
                         <p className="text-4xl text-white font-black mb-8 uppercase tracking-[0.3em] animate-pulse">
-                            THE DOGS ARE OUT
+                            THE DOGS HAVE BEEN RELEASED
                         </p>
                         {/* Deliberately not the song, and deliberately not a
                             joke the interface is in on. The scanner reports a
@@ -445,19 +544,29 @@ export default function BiometricLock() {
                         >
                             {config.model || advertisedModel || 'AWAITING LINK'}
                         </h2>
-                        <h1 className="text-xl font-bold tracking-widest text-glow text-neon-cyan">SECURITY PROTOCOL: LEVEL 5</h1>
-                        <div className="text-xs text-neon-cyan/70">Bio-Signature Required</div>
+                        {/* The agent's own description of itself, verbatim from
+                            agent.py's instruction. "SECURITY PROTOCOL: LEVEL 5"
+                            came from the finger build's lock and described
+                            nothing this app does. */}
+                        <h1 className="text-xl font-bold tracking-widest text-glow text-neon-cyan">CANINE VERIFICATION INTERROGATOR</h1>
+                        {/* "Canine Signature Required" was the biometric build's
+                            phrasing wearing a dog costume -- nothing here reads
+                            a signature and nothing is required of the subject.
+                            The agent's own first line is "ultra-low-latency
+                            determination of whether a presented subject is a
+                            dog"; this is that, at subtitle length. */}
+                        <div className="text-xs text-neon-cyan/70">Present subject for canine determination</div>
                     </div>
                     <div className={`px-4 py-2 text-xl font-bold border animate-pulse ${status === 'IDLE' ? 'border-red-500 text-red-500' :
                         status === 'SCANNING' && socketStatus === 'CONNECTED' ? 'border-yellow-400 text-yellow-400' :
                             'border-red-600 text-red-600'
                         }`}>
-                        {status === 'IDLE' && 'DISSOCIATED'}
+                        {status === 'IDLE' && 'STANDBY'}
                         {status === 'SCANNING' && (
                             <div className="flex items-center gap-3">
                                 {socketStatus === 'CONNECTED' ? (
                                     <>
-                                        <span>NEURAL SYNC INITIALIZED</span>
+                                        <span>SURVEILLANCE ACTIVE</span>
                                         {/* Network Pulse Indicator - Subtle Radar Blip */}
                                         <div className="relative flex items-center justify-center w-6 h-6 ml-1">
                                             {/* Expanding Ping Ring */}
@@ -477,7 +586,7 @@ export default function BiometricLock() {
                                         </div>
                                     </>
                                 ) : (
-                                    'NEURAL LINK DROPPED // OFFLINE'
+                                    'SCANNER LINK DROPPED // OFFLINE'
                                 )}
                             </div>
                         )}
@@ -487,8 +596,10 @@ export default function BiometricLock() {
                 {/* Center Challenge */}
                 <div className="flex-1 flex flex-col items-center justify-center gap-12 w-full max-w-4xl">
 
-                    {status === 'IDLE' && (
+                    {status === 'IDLE' && !previewScreen && (
                         <div className="flex flex-col items-center gap-6">
+                            <ScannerReticle className="w-36 h-36 text-neon-cyan/70 animate-pulse" />
+
                             {/* Chosen before the socket opens, because the Live
                                 session's speech_config is fixed at connect. The
                                 scanner then answers in that language throughout
@@ -511,12 +622,12 @@ export default function BiometricLock() {
                             onClick={handleInitiateOverride}
                             className="px-12 py-6 text-2xl font-bold border-2 border-neon-cyan hover:bg-neon-cyan hover:text-black transition-all shadow-[0_0_20px_rgba(0,255,255,0.3)] animate-pulse"
                         >
-                            INITIATE NEURAL SYNC
+                            BEGIN SURVEILLANCE
                         </button>
                         </div>
                     )}
 
-                    {status === 'SCANNING' && (
+                    {(status === 'SCANNING' || previewScreen) && (
                         <>
                             {/* The verdict.
                                 Written to the screen as well as spoken, because
@@ -524,25 +635,40 @@ export default function BiometricLock() {
                                 a video where a spoken subject is not, and it is
                                 the disagreements that are worth seeing. */}
                             <div className="flex flex-col items-center gap-4 min-h-[13rem] justify-center">
-                                {verdict === null ? (
-                                    <div className="text-neon-cyan/40 text-4xl font-black tracking-widest uppercase">
-                                        Awaiting Subject
-                                    </div>
+                                {shownVerdict === null ? (
+                                    <>
+                                        {/* The dog identity used to live only on
+                                            the idle screen, so the moment the
+                                            camera came up every trace of it left
+                                            -- the scanning screen, which is the
+                                            one people actually watch, was a line
+                                            of cyan text on a webcam. Same
+                                            reticle as idle, smaller and dimmer:
+                                            it is a waiting state, not a title.
+                                            Sized to stay inside the 13rem box so
+                                            the SCAN button does not move when a
+                                            verdict replaces it. */}
+                                        <ScannerReticle className="w-24 h-24 text-neon-cyan/30 animate-pulse" />
+                                        <div className="text-neon-cyan/40 text-4xl font-black tracking-widest uppercase">
+                                            Awaiting Subject
+                                        </div>
+                                    </>
                                 ) : (
                                     <>
                                         <div
-                                            className={`px-12 py-6 text-7xl font-black border-4 rounded-lg transition-all duration-300 ${verdict.isDog
+                                            className={`flex items-center gap-6 px-12 py-6 text-7xl font-black border-4 rounded-lg transition-all duration-300 ${shownVerdict.isDog
                                                 ? 'border-neon-green text-neon-green bg-neon-green/10 shadow-[0_0_30px_rgba(0,255,65,0.5)]'
                                                 : 'border-red-500 text-red-500 bg-red-500/10 shadow-[0_0_30px_rgba(255,0,0,0.4)]'
                                                 }`}
                                         >
-                                            {verdict.isDog ? 'DOG' : 'NOT A DOG'}
+                                            <PawPrint className="w-14 h-14 shrink-0" barred={!shownVerdict.isDog} />
+                                            {shownVerdict.isDog ? 'DOG' : 'NOT A DOG'}
                                         </div>
                                         <div className="text-3xl font-bold text-white uppercase tracking-wide text-center break-all">
-                                            {verdict.subject}
-                                            {verdict.confidence !== null && (
+                                            {shownVerdict.subject}
+                                            {shownVerdict.confidence !== null && (
                                                 <span className="text-neon-cyan/70 ml-3 tabular-nums">
-                                                    {verdict.confidence}%
+                                                    {shownVerdict.confidence}%
                                                 </span>
                                             )}
                                         </div>
@@ -583,8 +709,13 @@ export default function BiometricLock() {
 
                 {/* Footer / Timer */}
                 <div className="w-full max-w-4xl grid grid-cols-3 items-end">
-                    <div className="text-xl">
-                        SINGLE STAGE OPERATION
+                    {/* nowrap and a small mark: the footer is a third of a 4xl
+                        container, and "CONTINUOUS SURVEILLANCE" at text-xl very
+                        nearly fills it on its own -- a 20px paw and a gap-3 was
+                        enough to break it onto two lines. */}
+                    <div className="text-xl flex items-center gap-2 whitespace-nowrap">
+                        <PawPrint className="w-4 h-4 text-neon-cyan/60 shrink-0" />
+                        CONTINUOUS SURVEILLANCE
                     </div>
 
                     <div className="flex justify-center">
