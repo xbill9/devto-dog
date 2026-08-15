@@ -3,7 +3,7 @@ title: I built a security scanner that checks if you are a dog
 published: false
 description: A live-video scanner that barks when it sees a dog, built by a self-paced AI loop over one weekend. Every green checkmark in this project was, at some point, green over something broken.
 tags: devchallenge, weekendchallenge, ai, testing
-cover_image:
+cover_image: https://raw.githubusercontent.com/xbill9/devto-dog/ac3ec2c27648c6573383b58e91b40726567d1deb/posts/cover.jpg
 ---
 
 *This is a submission for [Weekend Challenge: Dog Days Edition](https://dev.to/challenges/weekend-2026-08-13)*
@@ -41,9 +41,51 @@ which does exactly the same thing.
 
 {% embed https://github.com/xbill9/devto-dog %}
 
+Running it yourself is four commands, and only one of them costs anything:
+
+```bash
+./scripts/install_deps.sh      # NOT a bare pip install -r; see below
+make frontend                  # npm ci && vite build — the backend serves dist/
+make mock                      # offline fake server on :8080, free, no API key
+make run                       # the real Live API — this one bills
+```
+
+The dependency script exists because `pip install -r requirements.txt` hard-fails here with `ResolutionImpossible`. `requirements.txt` pins `websockets==17.0.1`, deliberately above the caps `google-adk` (`<16`) and `google-genai` (`<17`) declare — those bounds are "last version we tested", not a real incompatibility, and `overrides.txt` overrides them. `uv` applies it with `--override`; pip has no equivalent, so the script installs the tree without websockets and then forces the pin with `--no-deps`. Do not "fix" this with a bare `--no-deps` on the whole file: it skips every transitive dependency too and leaves an app that cannot import.
+
 Forked from [way-back-home](https://github.com/xbill9/way-back-home), which was the same scanner counting fingers for a biometric handshake. The multimodal plumbing came from there — bidirectional WebSocket, 1 FPS video, local wake-word detection, the accuracy harness, the Cloud Run chain — and it is the reason this exists at all in a weekend.
 
 ## How I Built It
+
+### So where does the model actually sit?
+
+Nothing here is a request/response call. The browser holds one WebSocket open for the life of a scan, and the same socket carries frames up and speech down.
+
+```
+Browser (Chrome / Edge)                        Cloud Run  --min-instances=1
+┌─────────────────────────────┐                ┌──────────────────────────────┐
+│ getUserMedia                │                │ FastAPI  main.py             │
+│  ├ video → canvas → JPEG    │  binary  2  →  │  ├ origin allowlist          │
+│  │    640×480 q60 @ 1 FPS   │                │  │   (CORS does not apply    │
+│  └ audio → Web Speech API   │  {"type":      │  │    to WebSockets)         │
+│      never leaves the tab   │   "text"}  →   │  ├ LiveRequestQueue          │
+│                             │                │  └ ADK Runner  run_live()    │
+│ audioStreamer.js            │  ←  binary  3  │           │                  │
+│  └ mu-law → PCM → worklet   │     (mu-law)   │           ▼                  │
+│                             │                │  biometric_agent             │
+│ DogScanner.jsx              │  ←  {"type":   │   report_verdict             │
+│  └ DOG / NOT A DOG          │      "match"}  │   trigger_system_error       │
+└─────────────────────────────┘                │   trigger_heavy_metal_mode   │
+                                               └──────────────┬───────────────┘
+                                                              │ bidiGenerateContent
+                                                              ▼
+                                                     Gemini Live API
+```
+
+Two decisions in that picture cost the most to arrive at.
+
+**The microphone does not stream.** Its entire job is to catch the word "scan", and doing that over the wire costs 256 kbit/s of raw PCM — about two thirds of the uplink. Worse, continuous audio is what *stops* the model taking turns: measured **0/5** with speech in the room against **5/5** for the identical prompts sent as text. So the audio stays in the browser and the wake word sends the same text frame the offline harness sends. Uplink drops from ~385 to ~128 kbit/s, all of it video.
+
+**Model audio comes back as mu-law on a binary frame, not base64 in the JSON.** Base64 inflates binary by a third, and over a 14-second session that was measured at 220 KB → 95 KB, downlink 128 → 55 kbit/s. The encoder is 40 lines of pure Python; the decoder is a 256-entry table in the browser. Change one and you must change the other — a mismatch is static, not an error.
 
 I did not write this. A self-paced loop did, and I want to talk about what that was actually like — because the interesting part is not that it worked.
 
@@ -97,6 +139,18 @@ One dog fixture came back SILENT twice, consistently. It is a Halloween dog park
 
 The harness only scored `report_verdict`. But the instruction gives the easter eggs *absolute priority* over `report_verdict` — so the harness was marking the model doing exactly as it was told as a failure.
 
+### Is it actually right, though?
+
+There is exactly one thing in this repo that measures the model rather than the plumbing, and it needs no human in front of the camera:
+
+```bash
+python scripts/scan_accuracy.py --blur-prob 0.3 --jitter 2 --min-rate 0.8
+```
+
+It drives the real deployed endpoint with fixture images at 640×480 JPEG q60 — the exact format the browser sends — puts a `{"type":"text"}` frame in where you would say "scan", and scores every `report_verdict` against a count verified by eye before it was committed. One billed session per run. `--blur-prob` and `--jitter` approximate a real webcam; `--min-rate` turns it into a gate that can fail a build.
+
+What it cannot see: it holds one static fixture per trial, so it is structurally incapable of catching a *sampling* miss — a pose held for less than a second at 1 FPS that lands in no frame at all. That blind spot is how "1 FPS and 2 FPS score identically" got measured, believed, and written down.
+
 ### The numbers
 
 Twenty fixtures, one session each:
@@ -125,6 +179,10 @@ It optimised what it could reach instead of what mattered, and reported a blocke
 
 **Best Use of ElevenLabs** — the bark pack, generated with the Sound Effects API at **build time**, never at runtime. The clips are fetched and decoded once and held in memory, so the bark adds zero latency to the response path and cannot fail during a session. This project had already measured what a second audio stream does to a Live session — 0/5 against 5/5 — and the way to use a sound API here was to make the app touch the network *less*, not more.
 
-Sound effects generated with [ElevenLabs](https://elevenlabs.io). Fixture images from Wikimedia Commons, attributed in the repo.
+Sound effects generated with [ElevenLabs](https://elevenlabs.io). Fixture images from Wikimedia Commons, attributed in `tests/fixtures/ATTRIBUTION.md`.
+
+---
+
+**Measured on:** `gemini-3.1-flash-live-preview` via `google-adk==2.6.3` / `google-genai==2.17.0`, Python 3.13, deployed to Cloud Run in `us-central1` with `--min-instances=1` and `--timeout=3600` (a WebSocket is one long request; the default 300s cap would end every session at five minutes). Video 640×480 JPEG q60 at 1 FPS, audio 16 kHz PCM up / 24 kHz down. Client tested in Chrome — the wake word is `SpeechRecognition`, which is Chrome and Edge only; everywhere else the SCAN button does the identical thing.
 
 <!-- Thanks for participating! -->
