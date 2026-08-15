@@ -164,8 +164,6 @@ Twenty fixtures, one session each:
 
 Latency 0.68–1.56s, mostly around 0.7. It correctly said *"bronze statue"* for a sculpture of a man with a bronze dog beside him.
 
-**And one honest caveat: confidence is meaningless.** All 27 calls came back `confidence: 100`. Wolf, statue, retriever — 100 every time. It is rendered in the UI and it is noise.
-
 ### What the loop got wrong
 
 It reported the wrong blocker for four hours. It kept saying it was waiting on dog photos, while (a) there was no API key, which it had never checked, and (b) twenty public-domain fixtures with generated attribution turned out to be about ten minutes of work.
