@@ -84,6 +84,26 @@ gcloud secrets add-iam-policy-binding "$SECRET_NAME" \
 # timeout is the session cap. The default is 300s, which silently severed the
 # Live session five minutes in; 3600s is the maximum.
 #
+# Instance bounds are a spend cap, not a performance setting, and both
+# directions cost something:
+#
+#   --min-instances=0  lets it scale to nothing when idle, so an abandoned tab
+#                      or a forgotten deploy stops costing anything. The price
+#                      is a cold start on the next visit -- importing ADK and
+#                      google-genai is slow, and it lands on the first
+#                      connection of the session rather than in the background.
+#   --max-instances=1  caps the blast radius: one container, so a link that
+#                      gets shared cannot fan out into many billed Live
+#                      sessions at once. Note this is not a one-user cap --
+#                      Cloud Run's default concurrency is 80 requests per
+#                      instance, so several visitors are served by the same
+#                      container. The real ceiling is its CPU: every session is
+#                      a long-lived socket decoding JPEG and audio, so a few
+#                      simultaneous scans degrade before anything queues.
+#
+# Override either without editing this file:
+#   MIN_INSTANCES=1 MAX_INSTANCES=4 ./deploy.sh
+#
 # ALLOWED_ORIGINS gates the WebSocket handshake (CORS does not apply to it).
 # Leave it empty and the endpoint accepts any origin, which on a public
 # --allow-unauthenticated URL means anyone can stream into your billed Live
@@ -98,7 +118,8 @@ gcloud run deploy "${SERVICE_NAME}" \
   --project="${PROJECT_ID}" \
   --allow-unauthenticated \
   --timeout=3600 \
-  --min-instances=1 \
+  --min-instances="${MIN_INSTANCES:-0}" \
+  --max-instances="${MAX_INSTANCES:-1}" \
   --labels=dev-tutorial=multi-modal \
   --set-env-vars="^@^GOOGLE_CLOUD_PROJECT=${PROJECT_ID}@GOOGLE_CLOUD_LOCATION=${REGION}@GOOGLE_GENAI_USE_VERTEXAI=False@MODEL_ID=${MODEL_ID:-gemini-2.5-flash-native-audio-latest}@ALLOWED_ORIGINS=${ALLOWED_ORIGINS}" \
   --set-secrets="GOOGLE_API_KEY=${SECRET_NAME}:latest,GEMINI_API_KEY=${SECRET_NAME}:latest,GEMINI_KEY=${SECRET_NAME}:latest"
