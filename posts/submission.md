@@ -30,8 +30,7 @@ The classification line is where it gets interesting. A wolf is not a dog. Neith
 
 **Live:** https://dog-or-not-289270257791.us-central1.run.app
 
-<!-- PASTE_VIDEO_HERE — record with a phone held up to the webcam; the fixture
-     portal at /portal.html cycles the eval set. -->
+![A phone showing a dog photo held up to the webcam. The scanner returns a green DOG verdict reading "small dog 98%", while the telemetry panel shows detect 492 ms, think 490 ms, speak 871 ms and the trace logs the report_verdict tool call.](https://raw.githubusercontent.com/xbill9/devto-dog/5ca6791aafc94a2864ba76252da0dd4c903506a9/posts/dog.gif)
 
 Grant camera access, press INITIATE, then hold something up and say **"scan"**.
 Chrome or Edge for the voice command — everywhere else, use the SCAN button,
