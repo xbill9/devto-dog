@@ -23,10 +23,20 @@ steps:
       # timeout would cut the Live session off five minutes in. 3600s is the max.
       - '--timeout'
       - '3600'
-      # Avoids a cold start (ADK + google-genai is a slow import) on the first
-      # connection.
+      # Instance bounds, kept identical to deploy.sh. Both files deploy the same
+      # service, so a difference here silently reverts the other's settings on
+      # whichever ran last.
+      #
+      # 0 scales to nothing when idle, so a forgotten deploy stops costing
+      # anything; the price is a cold start (ADK + google-genai is a slow
+      # import) landing on the first connection of a session.
       - '--min-instances'
-      - '1'
+      - '${_MIN_INSTANCES}'
+      # 1 container, so a shared public link cannot fan out into many concurrent
+      # billed Live sessions. Not a one-user cap -- default concurrency is 80
+      # requests per instance, and CPU is the real ceiling.
+      - '--max-instances'
+      - '${_MAX_INSTANCES}'
       - '--labels'
       - 'dev-tutorial=multi-modal'
       # ALLOWED_ORIGINS gates the WebSocket handshake, which CORS does not cover.
@@ -47,6 +57,10 @@ timeout: 800s
 substitutions:
   _SERVICE_NAME: dog-or-not
   _REGION: us-central1
+  # Same defaults as deploy.sh's MIN_INSTANCES / MAX_INSTANCES. Override at
+  # submit time: --substitutions=_MIN_INSTANCES=1,_MAX_INSTANCES=4
+  _MIN_INSTANCES: '0'
+  _MAX_INSTANCES: '1'
   # Comma-separated origin allowlist for the WebSocket handshake. Empty accepts
   # any origin, which is only appropriate before the service URL is known.
   _ALLOWED_ORIGINS: ''
